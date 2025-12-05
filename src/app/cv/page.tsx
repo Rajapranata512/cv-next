@@ -4,11 +4,9 @@
 import { useEffect, useState } from "react";
 
 export default function CVPage() {
-  // Ganti nama file PDF jika perlu
   const pdfPath = "/Raja-Adi-Pranata-CV.pdf";
   const [hasPdf, setHasPdf] = useState<boolean | null>(null);
 
-  // Cek apakah file PDF tersedia di /public
   useEffect(() => {
     fetch(pdfPath, { method: "HEAD" })
       .then((r) => setHasPdf(r.ok))
@@ -30,7 +28,7 @@ export default function CVPage() {
           <div className="flex-1">
             <h1 className="text-3xl font-bold leading-tight">Raja Adi Pranata</h1>
             <p className="text-sm text-muted">
-              Computer Science &amp; Statistics — Jakarta, Indonesia
+              Computer Science &amp; Statistics - Jakarta, Indonesia
             </p>
             <div className="mt-2 text-sm flex flex-wrap gap-4">
               <a className="underline" href="mailto:raja.pranata@binus.ac.id">
@@ -107,9 +105,8 @@ export default function CVPage() {
           <div className="card avoid-break">
             <h2 className="text-lg font-semibold mb-2">Profile</h2>
             <p className="text-sm">
-              Final-year CS &amp; Statistics student focusing on analytics, web development, and
-              applied research. Comfortable with R, Python, and Next.js to turn data into
-              clear insights and practical features.
+              Final-year CS &amp; Statistics student focusing on analytics, web development, and applied research.
+              Comfortable with R, Python, and Next.js to turn data into clear insights and practical features.
             </p>
           </div>
 
@@ -141,13 +138,35 @@ export default function CVPage() {
               </ul>
             </div>
 
+            {/* NEW: Business Analytics (Tableau Public) */}
+            <div className="mb-3">
+              <div className="flex items-baseline justify-between">
+                <b>Business Analytics Dashboards (Tableau Public)</b>
+                <span className="text-xs text-muted">2025</span>
+              </div>
+              <ul className="mt-1 text-sm list-disc list-inside space-y-1">
+                <li>Interactive dashboards for sales KPIs, cohort/segmentation, and executive overview.</li>
+                <li>
+                  Link:{" "}
+                  <a
+                    href="https://public.tableau.com/app/profile/raja.adi.pranata/vizzes"
+                    className="underline"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    tableau.com/profile/raja.adi.pranata/vizzes
+                  </a>
+                </li>
+              </ul>
+            </div>
+
             <div>
               <div className="flex items-baseline justify-between">
                 <b>Kripuk.com</b>
                 <span className="text-xs text-muted">2025</span>
               </div>
               <ul className="mt-1 text-sm list-disc list-inside space-y-1">
-                <li>Content + catalog site on Next.js + Tailwind (Vercel).</li>
+                <li>Content plus catalog site on Next.js and Tailwind (Vercel).</li>
                 <li>Culture-focused storytelling with simple CMS structure.</li>
               </ul>
             </div>
@@ -156,10 +175,9 @@ export default function CVPage() {
       </section>
 
       <p className="no-print text-center text-xs text-muted my-8">
-        Tip: If the download button doesn’t work, use “Print to PDF”, lalu simpan ke
+        Tip: if the download button does not work yet, use Print to PDF, then save as{" "}
         <code className="mx-1 rounded bg-slate-100 px-1 py-0.5">/public/Raja-Adi-Pranata-CV.pdf</code>.
       </p>
     </main>
   );
 }
-    

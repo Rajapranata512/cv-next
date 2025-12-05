@@ -1,3 +1,4 @@
+// src/app/page.tsx
 "use client";
 
 import {
@@ -32,9 +33,25 @@ export default function Home() {
             <h1 className="text-3xl font-bold leading-tight">Raja Adi Pranata</h1>
             <p className="text-sm text-muted">Computer Science &amp; Statistics Student</p>
             <div className="mt-2 flex flex-wrap items-center gap-4 text-sm">
-              <a className="underline" href="mailto:raja.pranata@binus.ac.id">raja.pranata@binus.ac.id</a>
-              <a className="underline" href="https://github.com/Rajapranata512" target="_blank" rel="noreferrer">GitHub</a>
-              <a className="underline" href="https://www.linkedin.com/in/raja-adi-pranata-507704251/" target="_blank" rel="noreferrer">LinkedIn</a>
+              <a className="underline" href="mailto:raja.pranata@binus.ac.id">
+                raja.pranata@binus.ac.id
+              </a>
+              <a
+                className="underline"
+                href="https://github.com/Rajapranata512"
+                target="_blank"
+                rel="noreferrer"
+              >
+                GitHub
+              </a>
+              <a
+                className="underline"
+                href="https://www.linkedin.com/in/raja-adi-pranata-507704251/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                LinkedIn
+              </a>
             </div>
           </div>
 
@@ -50,11 +67,11 @@ export default function Home() {
       <section className="card mb-8">
         <h2 className="mb-3 text-xl font-semibold">Summary</h2>
         <p>
-          Final-year Computer Science and Statistics student with a strong interest in data analytics
-          and modern web development. Proficient in R, Python, and Next.js, with experience turning complex
-          datasets into clear visuals and actionable insights. Hands-on projects include interactive dashboards
-          and small web applications. Seeking an internship where I can contribute to data pipelines and build
-          practical web features.
+          Hello, I’m Raja Adi Pranata, a final-year student in Computer Science and Statistics with a strong interest
+          in data analytics and modern web development. Proficient in R, Python, and Next.js, with experience turning
+          complex datasets into clear visualisations and actionable insights. Practical projects include interactive
+          dashboards and small web applications. Seeking an internship where I can contribute to data pipelines and
+          build practical web features.
         </p>
       </section>
 
@@ -87,10 +104,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PROJECTS */}
+      {/* PROJECTS (ascending by year: 2023 → 2024 → 2025) */}
       <section className="card mb-8" id="projects">
         <h2 className="mb-3 text-xl font-semibold">College Projects</h2>
 
+        {/* 2023 */}
         <article className="avoid-break mb-5">
           <div className="flex items-baseline justify-between">
             <h3 className="font-semibold">Paper</h3>
@@ -112,20 +130,10 @@ export default function Home() {
           </ul>
         </article>
 
+        {/* 2024 */}
         <article className="avoid-break mb-5">
           <div className="flex items-baseline justify-between">
-            <h3 className="font-semibold">Kripuk.com</h3>
-            <span className="text-sm text-muted">2025</span>
-          </div>
-          <ul className="mt-2 list-inside list-disc space-y-1">
-            <li>Media-commerce for Indonesian snacks with culture-driven storytelling.</li>
-            <li>Stack: Next.js, Tailwind, Vercel.</li>
-          </ul>
-        </article>
-
-        <article className="avoid-break">
-          <div className="flex items-baseline justify-between">
-            <h3 className="font-semibold">Palorant — Valorant-style Web Project</h3>
+            <h3 className="font-semibold">Palorant - Valorant-style Web Project</h3>
             <span className="text-sm text-muted">2024</span>
           </div>
           <ul className="mt-2 list-inside list-disc space-y-1">
@@ -144,19 +152,66 @@ export default function Home() {
             </li>
           </ul>
         </article>
+
+        {/* 2025 - Kripuk */}
+        <article className="avoid-break mb-5">
+          <div className="flex items-baseline justify-between">
+            <h3 className="font-semibold">Kripuk.com</h3>
+            <span className="text-sm text-muted">2025</span>
+          </div>
+          <ul className="mt-2 list-inside list-disc space-y-1">
+            <li>Media-commerce for Indonesian snacks with culture-driven storytelling.</li>
+            <li>Stack: Next.js, Tailwind, Vercel.</li>
+            <li>
+              Live:{" "}
+              <a
+                href="https://kripuk-website-binus.vercel.app/"
+                target="_blank"
+                rel="noreferrer"
+                className="underline"
+              >
+                kripuk-website-binus.vercel.app
+              </a>
+            </li>
+          </ul>
+        </article>
+
+        {/* 2025 - Tableau */}
+        <article className="avoid-break">
+          <div className="flex items-baseline justify-between">
+            <h3 className="font-semibold">Business Analytics Dashboards (Tableau Public)</h3>
+            <span className="text-sm text-muted">2025</span>
+          </div>
+          <ul className="mt-2 list-inside list-disc space-y-1">
+            <li>
+              Collection of interactive dashboards for sales KPIs, customer segmentation, and executive overview.
+            </li>
+            <li>
+              Link:{" "}
+              <a
+                href="https://public.tableau.com/app/profile/raja.adi.pranata/vizzes"
+                target="_blank"
+                rel="noreferrer"
+                className="underline"
+              >
+                tableau.com/profile/raja.adi.pranata/vizzes
+              </a>
+            </li>
+          </ul>
+        </article>
       </section>
 
-      {/* EXPERIENCE */}
+      {/* COMMUNITY / LEADERSHIP */}
       <section className="card mb-8" id="experience">
         <h2 className="mb-3 text-xl font-semibold">Community</h2>
         <article className="avoid-break">
           <div className="flex items-baseline justify-between">
-            <h3 className="font-semibold">Data Analyst Intern — ABC Company</h3>
-            <span className="text-sm text-muted">Jun 2024 – Sep 2024</span>
+            <h3 className="font-semibold">HIMSTAT (Statistics Student Association)</h3>
+            <span className="text-sm text-muted">2022 - 2023</span>
           </div>
           <ul className="mt-2 list-inside list-disc space-y-1">
-            <li>Built KPI dashboards in Tableau and automated reporting with R.</li>
-            <li>Collaborated with the product team on A/B testing and analysis.</li>
+            <li>Event Lead for Community Service (P2M) in 2022.</li>
+            <li>Committee member for the SPSS workshop in 2023.</li>
           </ul>
         </article>
       </section>
@@ -166,8 +221,8 @@ export default function Home() {
         <h2 className="mb-3 text-xl font-semibold">Education</h2>
         <article className="avoid-break">
           <div className="flex items-baseline justify-between">
-            <h3 className="font-semibold">B.Sc. Computer Science &amp; Statistics — BINUS University</h3>
-            <span className="text-sm text-muted">2022 – Present</span>
+            <h3 className="font-semibold">B.Sc. Computer Science &amp; Statistics - BINUS University</h3>
+            <span className="text-sm text-muted">2022 - Present</span>
           </div>
           <ul className="mt-2 list-inside list-disc space-y-1">
             <li>Focus: Econometrics, Time-series, Web Development, Statistical Analysis.</li>
@@ -187,7 +242,9 @@ export default function Home() {
           </p>
           <p className="flex flex-wrap items-center gap-2">
             Phone / WhatsApp:{" "}
-            <a className="underline" href="tel:+6285694890848">+6285694890848</a>
+            <a className="underline" href="tel:+6285694890848">
+              +6285694890848
+            </a>
             <a
               className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-xs shadow-sm hover:bg-slate-50 transition"
               href="https://wa.me/6285694890848?text=Hi%2C%20I%27d%20like%20to%20get%20in%20touch%20regarding%20an%20opportunity."

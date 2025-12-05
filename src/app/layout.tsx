@@ -32,7 +32,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
 
         <nav className="no-print sticky top-0 z-20 bg-white/85 backdrop-blur border-b border-slate-200">
           <div className="mx-auto max-w-7xl h-14 px-6 flex items-center justify-between">
-            <Link href="/" className="font-semibold tracking-wide">rajaap.dev</Link>
+            <Link href="/" className="font-semibold tracking-wide"></Link>
             <div className="flex items-center gap-5 text-sm">
               <Link href="/#projects" className="hover:underline">Projects</Link>
               <Link href="/#experience" className="hover:underline">Experience</Link>
