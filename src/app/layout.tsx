@@ -44,12 +44,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
 
         <div id="content" className="min-h-dvh flex flex-col">
           <main className="flex-1">{children}</main>
-          <footer className="no-print border-t border-slate-200">
-            <div className="mx-auto max-w-7xl px-6 py-8 text-sm text-slate-600 flex flex-wrap items-center justify-between gap-3">
-              <span>© {new Date().getFullYear()} Raja Adi Pranata</span>
-              <span>Built with <span className="font-mono">Next.js</span> + <span className="font-mono">Tailwind</span></span>
-            </div>
-          </footer>
+          <footer className="my-8 text-center text-sm text-muted">
+        © {new Date().getFullYear()} Raja Adi Pranata.
+      </footer>
         </div>
       </body>
     </html>

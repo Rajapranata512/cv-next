@@ -202,10 +202,6 @@ export default function Home() {
           </p>
         </div>
       </section>
-
-      <footer className="my-8 text-center text-sm text-muted">
-        © {new Date().getFullYear()} Raja Adi Pranata.
-      </footer>
     </main>
   );
 }
