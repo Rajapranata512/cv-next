@@ -1,0 +1,30 @@
+/* Tailwind v4 */
+@import "tailwindcss";
+
+/* Tema terang */
+:root{
+  --muted:#64748b;        /* slate-500 */
+  --ring:#0284c7;         /* sky-600 */
+}
+
+html, body { height: 100%; }
+
+/* Komponen utilitas global */
+.card{
+  @apply rounded-2xl border border-slate-200 bg-white p-6 shadow-sm;
+}
+.btn{
+  @apply inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm shadow-sm transition hover:bg-slate-50;
+}
+
+/* Teks halus */
+.text-muted{ color: var(--muted); }
+
+/* Print-friendly */
+@media print {
+  @page { size: A4; margin: 12mm; }
+  .no-print { display: none !important; }
+  body { background: #fff; color: #000; }
+  .card { border: none; box-shadow: none; padding: 0; }
+  .avoid-break { page-break-inside: avoid; }
+}
