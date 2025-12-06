@@ -1,25 +1,14 @@
-// src/app/page.tsx
 "use client";
 
 import {
-  SiTypescript,
-  SiNextdotjs,
-  SiTailwindcss,
-  SiHtml5,
-  SiCss3,
-  SiLaravel,
-  SiR,
-  SiPython,
-  SiMysql,
-  SiTableau,
-  SiFigma,
-  SiWhatsapp,
+  SiTypescript, SiNextdotjs, SiTailwindcss, SiHtml5, SiCss3, SiLaravel,
+  SiR, SiPython, SiMysql, SiTableau, SiFigma, SiWhatsapp,
 } from "react-icons/si";
 
 export default function Home() {
   return (
     <main className="mx-auto max-w-5xl px-6 py-10 print:py-0">
-      {/* HERO */}
+      {/* HERO (sembunyikan saat print) */}
       <header className="mb-8 card no-print">
         <div className="flex flex-wrap items-center gap-5">
           <img
@@ -33,25 +22,9 @@ export default function Home() {
             <h1 className="text-3xl font-bold leading-tight">Raja Adi Pranata</h1>
             <p className="text-sm text-muted">Computer Science &amp; Statistics Student</p>
             <div className="mt-2 flex flex-wrap items-center gap-4 text-sm">
-              <a className="underline" href="mailto:raja.pranata@binus.ac.id">
-                raja.pranata@binus.ac.id
-              </a>
-              <a
-                className="underline"
-                href="https://github.com/Rajapranata512"
-                target="_blank"
-                rel="noreferrer"
-              >
-                GitHub
-              </a>
-              <a
-                className="underline"
-                href="https://www.linkedin.com/in/raja-adi-pranata-507704251/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                LinkedIn
-              </a>
+              <a className="underline" href="mailto:raja.pranata@binus.ac.id">raja.pranata@binus.ac.id</a>
+              <a className="underline" href="https://github.com/Rajapranata512" target="_blank" rel="noreferrer">GitHub</a>
+              <a className="underline" href="https://www.linkedin.com/in/raja-adi-pranata-507704251/" target="_blank" rel="noreferrer">LinkedIn</a>
             </div>
           </div>
 
@@ -104,7 +77,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PROJECTS (ascending by year: 2023 → 2024 → 2025) */}
+      {/* PROJECTS */}
       <section className="card mb-8" id="projects">
         <h2 className="mb-3 text-xl font-semibold">College Projects</h2>
 
@@ -130,17 +103,30 @@ export default function Home() {
           </ul>
         </article>
 
-        {/* 2024 */}
+        {/* 2024 – Palorant */}
         <article className="avoid-break mb-5">
           <div className="flex items-baseline justify-between">
-            <h3 className="font-semibold">Palorant - Valorant-style Web Project</h3>
+            <h3 className="font-semibold">Palorant – Valorant-style Web Project</h3>
             <span className="text-sm text-muted">2024</span>
           </div>
           <ul className="mt-2 list-inside list-disc space-y-1">
             <li>Multi-page Valorant-inspired website for HCI Lab assignment: Agents, Maps, News, Bug Report.</li>
             <li>Stack: semantic HTML, modern CSS, vanilla JavaScript, GitHub Pages.</li>
             <li>
-              Live:{" "}
+              Figma Prototype:{" "}
+              <a
+                href="https://www.figma.com/proto/smMeAYuwtlEs73TzAep2DR/project_lab?t=MMX8z7CteRkoMcMN-1&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1&node-id=2-2&starting-point-node-id=2%3A2&show-proto-sidebar=1"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 underline"
+                title="Open Figma Prototype"
+              >
+                <SiFigma className="h-4 w-4" aria-hidden />
+                View Prototype
+              </a>
+            </li>
+            <li>
+              Link:{" "}
               <a
                 href="https://rajapranata512.github.io/palorant-website/"
                 target="_blank"
@@ -153,7 +139,47 @@ export default function Home() {
           </ul>
         </article>
 
-        {/* 2025 - Kripuk */}
+        {/* 2025 – CCA Paper */}
+        <article className="avoid-break mb-5">
+          <div className="flex items-baseline justify-between">
+            <h3 className="font-semibold">
+              The Effect of Campus Physical Environment on Students' Psychological Health
+            </h3>
+            <span className="text-sm text-muted">2025</span>
+          </div>
+          <ul className="mt-2 list-inside list-disc space-y-1">
+            <li>
+              Empirical study using <strong>Canonical Correlation Analysis (CCA)</strong> to link campus physical
+              environment features with students’ psychological health indicators.
+            </li>
+            <li>
+              <strong>Scope:</strong> BINUS University students (Jakarta, Kemanggisan campuses); college student sample focus.
+            </li>
+            <li>
+              Workflow: reliability &amp; validity (CR/AVE, CFA), <em>Wilks’ Lambda</em>, and canonical correlation estimation in R.
+            </li>
+            <li>
+              PDF:{" "}
+              <a href="/papers/aol-multivariate.pdf" target="_blank" rel="noreferrer" className="underline">
+                Download / View paper (PDF)
+              </a>
+            </li>
+            <li>
+              Team roles (DOCX):{" "}
+              <a href="/papers/aol-pembagian-kerja.docx" target="_blank" rel="noreferrer" className="underline">
+                AoL Multivariate – Task Allocation
+              </a>
+            </li>
+            <li>
+              Output / code notes (TXT):{" "}
+              <a href="/papers/aol-output-code.txt" target="_blank" rel="noreferrer" className="underline">
+                output_code.txt
+              </a>
+            </li>
+          </ul>
+        </article>
+
+        {/* 2025 – Kripuk */}
         <article className="avoid-break mb-5">
           <div className="flex items-baseline justify-between">
             <h3 className="font-semibold">Kripuk.com</h3>
@@ -163,7 +189,7 @@ export default function Home() {
             <li>Media-commerce for Indonesian snacks with culture-driven storytelling.</li>
             <li>Stack: Next.js, Tailwind, Vercel.</li>
             <li>
-              Live:{" "}
+              Link:{" "}
               <a
                 href="https://kripuk-website-binus.vercel.app/"
                 target="_blank"
@@ -176,16 +202,14 @@ export default function Home() {
           </ul>
         </article>
 
-        {/* 2025 - Tableau */}
+        {/* 2025 – Tableau */}
         <article className="avoid-break">
           <div className="flex items-baseline justify-between">
             <h3 className="font-semibold">Business Analytics Dashboards (Tableau Public)</h3>
             <span className="text-sm text-muted">2025</span>
           </div>
           <ul className="mt-2 list-inside list-disc space-y-1">
-            <li>
-              Collection of interactive dashboards for sales KPIs, customer segmentation, and executive overview.
-            </li>
+            <li>Collection of interactive dashboards for sales KPIs, customer segmentation, and executive overview.</li>
             <li>
               Link:{" "}
               <a
@@ -201,7 +225,7 @@ export default function Home() {
         </article>
       </section>
 
-      {/* COMMUNITY / LEADERSHIP */}
+      {/* COMMUNITY */}
       <section className="card mb-8" id="experience">
         <h2 className="mb-3 text-xl font-semibold">Community</h2>
         <article className="avoid-break">
@@ -221,12 +245,9 @@ export default function Home() {
         <h2 className="mb-3 text-xl font-semibold">Education</h2>
         <article className="avoid-break">
           <div className="flex items-baseline justify-between">
-            <h3 className="font-semibold">B.Sc. Computer Science &amp; Statistics - BINUS University</h3>
+            <h3 className="font-semibold">Computer Science &amp; Statistics - BINUS University</h3>
             <span className="text-sm text-muted">2022 - Present</span>
           </div>
-          <ul className="mt-2 list-inside list-disc space-y-1">
-            <li>Focus: Econometrics, Time-series, Web Development, Statistical Analysis.</li>
-          </ul>
         </article>
       </section>
 
@@ -242,9 +263,7 @@ export default function Home() {
           </p>
           <p className="flex flex-wrap items-center gap-2">
             Phone / WhatsApp:{" "}
-            <a className="underline" href="tel:+6285694890848">
-              +6285694890848
-            </a>
+            <a className="underline" href="tel:+6285694890848">+6285694890848</a>
             <a
               className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1 text-xs shadow-sm hover:bg-slate-50 transition"
               href="https://wa.me/6285694890848?text=Hi%2C%20I%27d%20like%20to%20get%20in%20touch%20regarding%20an%20opportunity."

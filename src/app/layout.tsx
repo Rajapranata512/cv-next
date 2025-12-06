@@ -8,21 +8,24 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Raja Adi Pranata | CV",
-  description: "CV dan portofolio yang profesional dan simpel.",
-  metadataBase: new URL("https://example.com"), // ganti saat deploy
+ 
+  description: "Curriculum Vitae",
+  metadataBase: new URL("https://example.com"), // ganti saat deploy (domain kamu)
   openGraph: {
-    title: "Raja Adi Pranata | CV",
-    description: "CV dan portofolio yang profesional dan simpel.",
+    title: "CV",
+    description: "Curriculum Vitae",
     type: "website",
     url: "https://example.com",
   },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="id" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="antialiased bg-white text-slate-900">
+        {/* Skip to content (aksesibilitas) */}
         <a
           href="#content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-sky-600 focus:px-3 focus:py-2 focus:text-white"
@@ -30,9 +33,12 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           Lewati ke konten
         </a>
 
+        {/* NAVBAR — disembunyikan saat print */}
         <nav className="no-print sticky top-0 z-20 bg-white/85 backdrop-blur border-b border-slate-200">
           <div className="mx-auto max-w-7xl h-14 px-6 flex items-center justify-between">
-            <Link href="/" className="font-semibold tracking-wide"></Link>
+            <Link href="/" className="font-semibold tracking-wide">
+              {/* kosongkan brand agar tidak tampil teks berlebih */}
+            </Link>
             <div className="flex items-center gap-5 text-sm">
               <Link href="/#projects" className="hover:underline">Projects</Link>
               <Link href="/#experience" className="hover:underline">Experience</Link>
@@ -42,11 +48,16 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           </div>
         </nav>
 
+        {/* Judul khusus PRINT di tengah halaman */}
+        <h1 className="print-only text-center text-2xl font-semibold my-4">CV</h1>
+
         <div id="content" className="min-h-dvh flex flex-col">
           <main className="flex-1">{children}</main>
-          <footer className="my-8 text-center text-sm text-muted">
-        © {new Date().getFullYear()} Raja Adi Pranata.
-      </footer>
+
+          {/* Footer — otomatis ikut tersembunyi jika kamu beri class no-print (opsional) */}
+          <footer className="my-8 text-center text-sm text-muted no-print">
+            © {new Date().getFullYear()} Raja Adi Pranata.
+          </footer>
         </div>
       </body>
     </html>
