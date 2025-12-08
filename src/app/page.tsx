@@ -228,11 +228,11 @@ export default function Home() {
                 extra={
                   <div className="text-sm">
                     Resources:{" "}
-                    <a className={LINK} href="/docs/cca-campus-psych-health.pdf" target="_blank" rel="noreferrer" download>PDF (download)</a>
+                    <a className={LINK} href="/papers/aol-multivariate.pdf"  target="_blank" rel="noreferrer" >PDF (download)/View</a>
                     <span className="px-1">·</span>
-                    <a className={LINK} href="/docs/task-allocation.docx" target="_blank" rel="noreferrer" download>Roles (DOCX): Task Allocation</a>
+                    <a className={LINK} href="/papers/aol-pembagian-kerja.docx" target="_blank" rel="noreferrer" download>Roles (DOCX): Task Allocation</a>
                     <span className="px-1">·</span>
-                    <a className={LINK} href="/docs/output_code.txt" target="_blank" rel="noreferrer" download>Output (TXT): output_code.txt</a>
+                    <a className={LINK} href="/papers/aol-output-code.txt"  target="_blank" rel="noreferrer" >Output (TXT): output_code.txt</a>
                   </div>
                 }
               />
