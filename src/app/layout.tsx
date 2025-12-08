@@ -1,64 +1,79 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
+const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
+
+const siteUrl = "https://cv-next-pied.vercel.app";
 
 export const metadata: Metadata = {
- 
-  description: "Curriculum Vitae",
-  metadataBase: new URL("https://example.com"), // ganti saat deploy (domain kamu)
+  metadataBase: new URL(siteUrl),
+  title: "Raja Adi Pranata | Portfolio & CV",
+  description:
+    "Final-year Computer Science & Statistics student. I build data pipelines, dashboards, and pragmatic web features.",
+  alternates: { canonical: siteUrl },
   openGraph: {
-    title: "CV",
-    description: "Curriculum Vitae",
     type: "website",
-    url: "https://example.com",
+    url: siteUrl,
+    title: "Raja Adi Pranata | Portfolio & CV",
+    description:
+      "Data pipelines, dashboards, and modern web features. View projects, community work, and contact.",
+    images: [{ url: "/og-cover.jpg", width: 1200, height: 630, alt: "Raja Adi Pranata — Portfolio" }],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Raja Adi Pranata | Portfolio & CV",
+    description: "Data pipelines, dashboards, and modern web features.",
+    images: ["/og-cover.jpg"],
+  },
+  icons: { icon: "/favicon.ico" },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: "Raja Adi Pranata",
+    url: siteUrl,
+    sameAs: [
+      "mailto:raja.pranata@binus.ac.id",
+      "https://github.com/Rajapranata512",
+      "https://www.linkedin.com/in/raja-adi-pranata-507704251/",
+    ],
+    worksFor: { "@type": "CollegeOrUniversity", name: "BINUS University" },
+    jobTitle: "Computer Science & Statistics Student",
+  };
+
   return (
-    <html lang="id" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="antialiased bg-white text-slate-900">
-        {/* Skip to content (aksesibilitas) */}
-        <a
-          href="#content"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-sky-600 focus:px-3 focus:py-2 focus:text-white"
-        >
-          Lewati ke konten
-        </a>
+    <html lang="en" className="h-full">
+      <body
+        className={[
+          geistSans.variable,
+          geistMono.variable,
+          // Tidak memaksa putih; warna diatur oleh .page-bg
+          "min-h-dvh text-slate-900 antialiased dark:text-slate-100",
+          "overflow-x-hidden",
+        ].join(" ")}
+      >
+        {/* Latar halaman global (aurora + grain + edge glow) */}
+        <div className="page-bg fixed inset-0 -z-10" />
+        <div className="edge-left" />
+        <div className="edge-right" />
 
-        {/* NAVBAR — disembunyikan saat print */}
-        <nav className="no-print sticky top-0 z-20 bg-white/85 backdrop-blur border-b border-slate-200">
-          <div className="mx-auto max-w-7xl h-14 px-6 flex items-center justify-between">
-            <Link href="/" className="font-semibold tracking-wide">
-              {/* kosongkan brand agar tidak tampil teks berlebih */}
-            </Link>
-            <div className="flex items-center gap-5 text-sm">
-              <Link href="/#projects" className="hover:underline">Projects</Link>
-              <Link href="/#experience" className="hover:underline">Experience</Link>
-              <Link href="/cv" className="hover:underline">CV</Link>
-              <Link href="/#contact" className="hover:underline">Contact</Link>
-            </div>
-          </div>
-        </nav>
+        {/* JSON-LD */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
 
-        {/* Judul khusus PRINT di tengah halaman */}
-        <h1 className="print-only text-center text-2xl font-semibold my-4">CV</h1>
+        {/* Konten */}
+        {children}
 
-        <div id="content" className="min-h-dvh flex flex-col">
-          <main className="flex-1">{children}</main>
-
-          {/* Footer — otomatis ikut tersembunyi jika kamu beri class no-print (opsional) */}
-          <footer className="my-8 text-center text-sm text-muted no-print">
-            © {new Date().getFullYear()} Raja Adi Pranata.
-          </footer>
-        </div>
+        <footer className="mt-12 py-8 text-center text-sm text-muted">
+          © {new Date().getFullYear()} Raja Adi Pranata · Built with Next.js & Tailwind
+        </footer>
       </body>
     </html>
   );

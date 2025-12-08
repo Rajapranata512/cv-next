@@ -1,7 +1,9 @@
+/* src/app/globals.css */
+
 /* Tailwind v4 */
 @import "tailwindcss";
 
-/* Tema terang (putih–biru profesional) */
+/* ===== Design tokens (terang) ===== */
 :root{
   --muted:#64748b;     /* slate-500 */
   --ring:#0284c7;      /* sky-600  */
@@ -10,36 +12,178 @@
 
 html, body { height: 100%; }
 html { scroll-behavior: smooth; }
-body { background:#fff; color:#0f172a; /* slate-900 */ }
+
+/* Jangan paksa putih di body; biarkan .page-bg yang mengatur */
+body { color:#0f172a; } /* slate-900 */
 
 /* Fokus aksesibel */
 *:focus-visible { outline:2px solid var(--ring); outline-offset:2px; }
 
-/* Komponen utilitas global */
-.card{ @apply rounded-2xl border border-slate-200 bg-white p-6 shadow-sm; }
-.btn{ @apply inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm shadow-sm transition hover:bg-slate-50; }
+/* ===== Komponen utilitas dasar ===== */
+.card{
+  @apply rounded-2xl border border-slate-200 bg-white p-6 shadow-sm;
+}
+.btn{
+  @apply inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm shadow-sm transition hover:bg-slate-50;
+}
 .text-muted{ color: var(--muted); }
 a.underline{ text-decoration-color: var(--link); text-underline-offset: 2px; }
 
-/* Spasi antar section & kontrol pecah halaman */
 section.card + section.card { @apply mt-8; }
 h1,h2,h3 { break-after: avoid; }
 .avoid-break { page-break-inside: avoid; }
 
-/* Print helpers */
 .no-print {}
 .print-only { display:none; }
 
-/* Print styling */
+/* ===== Print styling ===== */
 @media print {
   @page { size: A4; margin: 12mm; }
-
   .no-print { display: none !important; }
   .print-only { display: block !important; }
-
+  /* Saat print, putihkan semuanya agar hemat tinta */
   body { background:#fff !important; color:#000 !important; }
   .card { border: none !important; box-shadow: none !important; padding: 0 !important; }
-
   h1,h2,h3 { page-break-after: avoid; }
   .avoid-break { page-break-inside: avoid; }
 }
+
+/* ===== Luxe UI helpers ===== */
+.glass { @apply bg-white/70 backdrop-blur-md dark:bg-white/10; }
+.btn-luxe {
+  @apply relative inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/80 px-4 py-2 text-sm font-semibold shadow-sm backdrop-blur-md transition hover:bg-white dark:bg-white/10;
+}
+.badge { @apply rounded-full border border-white/20 bg-white/70 px-3 py-1.5 text-sm shadow-sm backdrop-blur-md dark:bg-white/10; }
+.neon-frame { background: linear-gradient(120deg, rgba(34,211,238,.5), rgba(244,114,182,.5), rgba(99,102,241,.5)); }
+.aurora {
+  position:absolute; inset:-40%;
+  background:
+    radial-gradient(40% 60% at 20% 30%, rgba(34,211,238,.20), transparent 60%),
+    radial-gradient(40% 60% at 80% 20%, rgba(244,114,182,.18), transparent 60%),
+    radial-gradient(40% 60% at 50% 80%, rgba(99,102,241,.22), transparent 60%);
+  filter: blur(60px);
+  animation: float 16s ease-in-out infinite alternate;
+}
+@keyframes float { 0%{ transform: translateY(-10px) rotate(0deg)} 100%{ transform: translateY(10px) rotate(2deg)} }
+
+/* ==== Panel & frame seragam ==== */
+.panel {
+  @apply rounded-3xl p-6 shadow-lg ring-1 ring-white/15 backdrop-blur-md;
+  @apply bg-white/70 dark:bg-white/10;
+}
+.panel-gradient { position: relative; }
+.panel-gradient::before {
+  content: ""; position: absolute; inset: -1px; border-radius: 1.5rem;
+  background: linear-gradient(120deg,
+    rgba(34,211,238,.45),
+    rgba(244,114,182,.45),
+    rgba(99,102,241,.45)
+  );
+  z-index: 0;
+}
+.panel-gradient > * { position: relative; z-index: 1; }
+
+/* Lencana judul section */
+.section-title { @apply mb-4 inline-flex items-center gap-2 text-xl font-semibold; }
+.section-title .dot {
+  @apply inline-block h-2 w-2 rounded-full;
+  background: linear-gradient(120deg,#22d3ee,#f472b6,#6366f1);
+  box-shadow: 0 0 12px rgba(34,211,238,.6);
+}
+
+/* Badge skill (konsisten) */
+.badge { @apply rounded-full border px-3 py-1.5 text-sm shadow-sm backdrop-blur-md border-white/20 bg-white/70 dark:bg-white/10; }
+
+/* Tombol */
+.btn { @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold; }
+.btn-luxe { @apply border border-white/20 bg-white/80 hover:bg-white transition backdrop-blur-md dark:bg-white/10; }
+
+/* Link */
+.link { @apply underline underline-offset-4 decoration-slate-300 hover:decoration-cyan-400; }
+
+/* ===== Latar utama: aurora penuh + pola titik ===== */
+.page-bg {
+  background:
+    radial-gradient(#0f172a10 1px, transparent 1px) 0 0/18px 18px,
+    radial-gradient(1200px 600px at -10% 10%, #a5f3fc33 0%, transparent 60%),
+    radial-gradient(1200px 700px at 110% 0%, #fbcfe833 0%, transparent 65%),
+    radial-gradient(900px 600px at 50% 110%, #c7d2fe33 0%, transparent 60%),
+    linear-gradient(180deg, #eef2ff 0%, #ecfeff 35%, #fdf2f8 70%, #f5f3ff 100%);
+}
+
+.dark .page-bg {
+  background:
+    radial-gradient(#ffffff14 1px, transparent 1px) 0 0/18px 18px,
+    radial-gradient(1200px 600px at -10% 10%, #22d3ee33 0%, transparent 60%),
+    radial-gradient(1200px 700px at 110% 0%, #f472b633 0%, transparent 65%),
+    radial-gradient(900px 600px at 50% 110%, #6366f133 0%, transparent 60%),
+    linear-gradient(180deg, #0b1220 0%, #0b1324 100%);
+}
+
+/* Glow tepi kiri/kanan */
+.edge-left, .edge-right { position: fixed; top: 0; bottom: 0; width: 64px; pointer-events:none; z-index:-1; }
+.edge-left  { left: 0;  background: linear-gradient(to right, rgba(34,211,238,.12), transparent); }
+.edge-right { right: 0; background: linear-gradient(to left,  rgba(99,102,241,.12), transparent); }
+
+/* Bar kemajuan (HUD) */
+.progress-rail  { @apply h-2 overflow-hidden rounded-full bg-slate-200/70 dark:bg-white/10; }
+.progress-fill  { background: linear-gradient(90deg,#22d3ee,#f472b6,#6366f1); height:100%; }
+
+
+/* ==== Animations & Effects ==== */
+
+/* Fade-up reveal */
+@keyframes k-fade-up {
+  from { opacity: 0; transform: translateY(16px) scale(.99); filter: blur(2px); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    filter: blur(0); }
+}
+.reveal { opacity: 0; transform: translateY(16px) scale(.99); }
+.reveal-in { animation: k-fade-up .7s cubic-bezier(.2,.65,.2,1) forwards; }
+
+/* Animated gradient border (untuk panel “panel-gradient”) */
+@keyframes k-border-flow {
+  0%  { filter: hue-rotate(0deg) brightness(1); }
+  50% { filter: hue-rotate(25deg) brightness(1.08); }
+  100%{ filter: hue-rotate(0deg) brightness(1); }
+}
+.panel-gradient::before { animation: k-border-flow 9s linear infinite; }
+
+/* Subtle float (ikon/badge) */
+@keyframes k-float { 
+  0% { transform: translateY(0px) }
+  50%{ transform: translateY(-4px) }
+  100%{ transform: translateY(0px) }
+}
+.float-soft { animation: k-float 4.5s ease-in-out infinite; }
+
+/* Spotlight yang mengikuti cursor (dipakai di hero wrapper) */
+.spotlight {
+  position: relative;
+  --mx: 50%;
+  --my: 50%;
+}
+.spotlight::after{
+  content:"";
+  pointer-events:none;
+  position:absolute; inset: -2px;
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(600px 250px at var(--mx) var(--my),
+      rgba(255,255,255,.35), transparent 60%),
+    radial-gradient(800px 300px at calc(var(--mx) - 10%) calc(var(--my) + 10%),
+      rgba(56,189,248,.18), transparent 70%);
+  mix-blend-mode: soft-light;
+  transition: opacity .3s;
+  opacity: .6;
+}
+
+/* Card interaktif (tilt) */
+.icard {
+  transform-style: preserve-3d;
+  transition: transform .2s ease, box-shadow .3s ease, background-color .2s ease;
+  will-change: transform;
+}
+.icard--hover:hover { box-shadow: 0 22px 60px -20px rgba(15, 23, 42, .25); }
+
+/* Elemen yang “naik” saat tilt (judul dll) */
+.lift { transform: translateZ(24px); }
