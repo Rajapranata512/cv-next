@@ -72,7 +72,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
 
         <footer className="mt-12 py-8 text-center text-sm text-muted">
-          © {new Date().getFullYear()} Raja Adi Pranata · Built with Next.js & Tailwind
+          © {new Date().getFullYear()} Raja Adi Pranata 
         </footer>
       </body>
     </html>

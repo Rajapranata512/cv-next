@@ -3,9 +3,10 @@
 /* Tailwind v4 */
 @import "tailwindcss";
 
-/* ===== Design tokens (terang) ===== */
+/* ===== Design tokens ===== */
 :root{
-  --muted:#64748b;     /* slate-500 */
+  --text:#0f172a;      /* slate-900 */
+  --muted:#475569;     /* slate-600 */
   --ring:#0284c7;      /* sky-600  */
   --link:#0ea5e9;      /* sky-500  */
 }
@@ -13,96 +14,193 @@
 html, body { height: 100%; }
 html { scroll-behavior: smooth; }
 
-/* Jangan paksa putih di body; biarkan .page-bg yang mengatur */
-body { color:#0f172a; } /* slate-900 */
+body{
+  color: var(--text);
+  background: transparent; /* background diatur oleh .page-bg */
+}
 
 /* Fokus aksesibel */
-*:focus-visible { outline:2px solid var(--ring); outline-offset:2px; }
-
-/* ===== Komponen utilitas dasar ===== */
-.card{
-  @apply rounded-2xl border border-slate-200 bg-white p-6 shadow-sm;
+*:focus-visible{
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
-.btn{
-  @apply inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm shadow-sm transition hover:bg-slate-50;
+
+/* ===== Print helpers ===== */
+.no-print { display: block; }
+.print-only { display: none; }
+
+@media screen {
+  .print-only { display: none; }
 }
-.text-muted{ color: var(--muted); }
-a.underline{ text-decoration-color: var(--link); text-underline-offset: 2px; }
 
-section.card + section.card { @apply mt-8; }
-h1,h2,h3 { break-after: avoid; }
-.avoid-break { page-break-inside: avoid; }
-
-.no-print {}
-.print-only { display:none; }
-
-/* ===== Print styling ===== */
 @media print {
-  @page { size: A4; margin: 12mm; }
+  @page { size: A4; margin: 10mm; }
+
   .no-print { display: none !important; }
   .print-only { display: block !important; }
-  /* Saat print, putihkan semuanya agar hemat tinta */
-  body { background:#fff !important; color:#000 !important; }
-  .card { border: none !important; box-shadow: none !important; padding: 0 !important; }
-  h1,h2,h3 { page-break-after: avoid; }
-  .avoid-break { page-break-inside: avoid; }
+
+  /* Pastikan hasil PDF bersih */
+  body{
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* Hindari “kepingan” komponen terpisah halaman */
+  .avoid-break{
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Background aurora tidak perlu di-print */
+  .page-bg{ background: #fff !important; }
+
+  /* Kurangi efek visual saat print */
+  .panel, .card{
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+  .edge-left, .edge-right, .aurora, .spotlight::after{
+    display: none !important;
+  }
+}
+
+/* ===== Base utilities (single source of truth) ===== */
+.text-muted { color: var(--muted); }
+
+.link{
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: rgb(203 213 225); /* slate-300 */
+}
+.link:hover{
+  text-decoration-color: rgb(34 211 238); /* cyan-400 */
+}
+
+/* ===== Cards / Buttons (do not duplicate) ===== */
+.card{
+  border: 1px solid rgb(226 232 240); /* slate-200 */
+  background: rgba(255,255,255,.92);
+  border-radius: 1.25rem; /* 2xl */
+  padding: 1.5rem;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, .06);
+}
+
+.btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  border: 1px solid rgb(226 232 240);
+  background: rgba(255,255,255,.90);
+  border-radius: .9rem;
+  padding: .55rem .95rem;
+  font-size: .875rem;
+  font-weight: 600;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, .06);
+  transition: transform .2s ease, box-shadow .25s ease, background-color .2s ease;
+}
+.btn:hover{
+  background: rgba(255,255,255,1);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, .10);
+  transform: translateY(-1px);
 }
 
 /* ===== Luxe UI helpers ===== */
-.glass { @apply bg-white/70 backdrop-blur-md dark:bg-white/10; }
-.btn-luxe {
-  @apply relative inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/80 px-4 py-2 text-sm font-semibold shadow-sm backdrop-blur-md transition hover:bg-white dark:bg-white/10;
+.glass{
+  background: rgba(255,255,255,.70);
+  backdrop-filter: blur(10px);
 }
-.badge { @apply rounded-full border border-white/20 bg-white/70 px-3 py-1.5 text-sm shadow-sm backdrop-blur-md dark:bg-white/10; }
-.neon-frame { background: linear-gradient(120deg, rgba(34,211,238,.5), rgba(244,114,182,.5), rgba(99,102,241,.5)); }
-.aurora {
-  position:absolute; inset:-40%;
-  background:
-    radial-gradient(40% 60% at 20% 30%, rgba(34,211,238,.20), transparent 60%),
-    radial-gradient(40% 60% at 80% 20%, rgba(244,114,182,.18), transparent 60%),
-    radial-gradient(40% 60% at 50% 80%, rgba(99,102,241,.22), transparent 60%);
-  filter: blur(60px);
-  animation: float 16s ease-in-out infinite alternate;
-}
-@keyframes float { 0%{ transform: translateY(-10px) rotate(0deg)} 100%{ transform: translateY(10px) rotate(2deg)} }
 
-/* ==== Panel & frame seragam ==== */
-.panel {
-  @apply rounded-3xl p-6 shadow-lg ring-1 ring-white/15 backdrop-blur-md;
-  @apply bg-white/70 dark:bg-white/10;
+.panel{
+  border-radius: 1.5rem; /* 3xl */
+  padding: 1.5rem;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, .10);
+  border: 1px solid rgba(15,23,42,.06);
+  background: rgba(255,255,255,.78);
+  backdrop-filter: blur(12px);
 }
-.panel-gradient { position: relative; }
-.panel-gradient::before {
-  content: ""; position: absolute; inset: -1px; border-radius: 1.5rem;
+
+.panel-gradient{
+  position: relative;
+}
+.panel-gradient::before{
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 1.5rem;
   background: linear-gradient(120deg,
-    rgba(34,211,238,.45),
-    rgba(244,114,182,.45),
-    rgba(99,102,241,.45)
+    rgba(34,211,238,.32),
+    rgba(244,114,182,.30),
+    rgba(99,102,241,.32)
   );
   z-index: 0;
+  animation: k-border-flow 10s linear infinite;
 }
-.panel-gradient > * { position: relative; z-index: 1; }
+.panel-gradient > *{
+  position: relative;
+  z-index: 1;
+}
 
-/* Lencana judul section */
-.section-title { @apply mb-4 inline-flex items-center gap-2 text-xl font-semibold; }
-.section-title .dot {
-  @apply inline-block h-2 w-2 rounded-full;
+/* Section title */
+.section-title{
+  margin-bottom: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.section-title .dot{
+  width: .5rem;
+  height: .5rem;
+  border-radius: 9999px;
   background: linear-gradient(120deg,#22d3ee,#f472b6,#6366f1);
-  box-shadow: 0 0 12px rgba(34,211,238,.6);
+  box-shadow: 0 0 10px rgba(34,211,238,.35);
 }
 
-/* Badge skill (konsisten) */
-.badge { @apply rounded-full border px-3 py-1.5 text-sm shadow-sm backdrop-blur-md border-white/20 bg-white/70 dark:bg-white/10; }
+/* Skill badge */
+.badge{
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(15,23,42,.08);
+  background: rgba(255,255,255,.85);
+  padding: .35rem .75rem;
+  font-size: .875rem;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, .06);
+  backdrop-filter: blur(10px);
+  transition: transform .2s ease, box-shadow .25s ease;
+}
+.badge:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, .10);
+}
 
-/* Tombol */
-.btn { @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-semibold; }
-.btn-luxe { @apply border border-white/20 bg-white/80 hover:bg-white transition backdrop-blur-md dark:bg-white/10; }
+/* Button variant used in your pages */
+.btn-luxe{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  border-radius: .95rem;
+  padding: .55rem .95rem;
+  font-size: .875rem;
+  font-weight: 700;
+  border: 1px solid rgba(15,23,42,.10);
+  background: rgba(255,255,255,.78);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .08);
+  transition: transform .2s ease, box-shadow .25s ease, background-color .2s ease;
+}
+.btn-luxe:hover{
+  background: rgba(255,255,255,.92);
+  transform: translateY(-1px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, .12);
+}
 
-/* Link */
-.link { @apply underline underline-offset-4 decoration-slate-300 hover:decoration-cyan-400; }
-
-/* ===== Latar utama: aurora penuh + pola titik ===== */
-.page-bg {
+/* ===== Page background ===== */
+.page-bg{
   background:
     radial-gradient(#0f172a10 1px, transparent 1px) 0 0/18px 18px,
     radial-gradient(1200px 600px at -10% 10%, #a5f3fc33 0%, transparent 60%),
@@ -111,53 +209,59 @@ h1,h2,h3 { break-after: avoid; }
     linear-gradient(180deg, #eef2ff 0%, #ecfeff 35%, #fdf2f8 70%, #f5f3ff 100%);
 }
 
-.dark .page-bg {
-  background:
-    radial-gradient(#ffffff14 1px, transparent 1px) 0 0/18px 18px,
-    radial-gradient(1200px 600px at -10% 10%, #22d3ee33 0%, transparent 60%),
-    radial-gradient(1200px 700px at 110% 0%, #f472b633 0%, transparent 65%),
-    radial-gradient(900px 600px at 50% 110%, #6366f133 0%, transparent 60%),
-    linear-gradient(180deg, #0b1220 0%, #0b1324 100%);
+/* Edge glow */
+.edge-left, .edge-right{
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 64px;
+  pointer-events: none;
+  z-index: -1;
+}
+.edge-left{
+  left: 0;
+  background: linear-gradient(to right, rgba(34,211,238,.10), transparent);
+}
+.edge-right{
+  right: 0;
+  background: linear-gradient(to left, rgba(99,102,241,.10), transparent);
 }
 
-/* Glow tepi kiri/kanan */
-.edge-left, .edge-right { position: fixed; top: 0; bottom: 0; width: 64px; pointer-events:none; z-index:-1; }
-.edge-left  { left: 0;  background: linear-gradient(to right, rgba(34,211,238,.12), transparent); }
-.edge-right { right: 0; background: linear-gradient(to left,  rgba(99,102,241,.12), transparent); }
-
-/* Bar kemajuan (HUD) */
-.progress-rail  { @apply h-2 overflow-hidden rounded-full bg-slate-200/70 dark:bg-white/10; }
-.progress-fill  { background: linear-gradient(90deg,#22d3ee,#f472b6,#6366f1); height:100%; }
-
-
-/* ==== Animations & Effects ==== */
-
-/* Fade-up reveal */
-@keyframes k-fade-up {
-  from { opacity: 0; transform: translateY(16px) scale(.99); filter: blur(2px); }
-  to   { opacity: 1; transform: translateY(0)    scale(1);    filter: blur(0); }
+/* ===== Progress bars ===== */
+.progress-rail{
+  height: .5rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: rgba(226,232,240,.8);
 }
-.reveal { opacity: 0; transform: translateY(16px) scale(.99); }
-.reveal-in { animation: k-fade-up .7s cubic-bezier(.2,.65,.2,1) forwards; }
+.progress-fill{
+  height: 100%;
+  background: linear-gradient(90deg,#22d3ee,#f472b6,#6366f1);
+}
 
-/* Animated gradient border (untuk panel “panel-gradient”) */
-@keyframes k-border-flow {
-  0%  { filter: hue-rotate(0deg) brightness(1); }
-  50% { filter: hue-rotate(25deg) brightness(1.08); }
+/* ===== Animations & Effects ===== */
+@keyframes k-fade-up{
+  from{ opacity:0; transform: translateY(14px) scale(.99); filter: blur(1.5px); }
+  to  { opacity:1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+.reveal{ opacity: 0; transform: translateY(14px) scale(.99); }
+.reveal-in{ animation: k-fade-up .65s cubic-bezier(.2,.65,.2,1) forwards; }
+
+@keyframes k-border-flow{
+  0%{ filter: hue-rotate(0deg) brightness(1); }
+  50%{ filter: hue-rotate(18deg) brightness(1.06); }
   100%{ filter: hue-rotate(0deg) brightness(1); }
 }
-.panel-gradient::before { animation: k-border-flow 9s linear infinite; }
 
-/* Subtle float (ikon/badge) */
-@keyframes k-float { 
-  0% { transform: translateY(0px) }
-  50%{ transform: translateY(-4px) }
-  100%{ transform: translateY(0px) }
+@keyframes k-float{
+  0%{ transform: translateY(0); }
+  50%{ transform: translateY(-4px); }
+  100%{ transform: translateY(0); }
 }
-.float-soft { animation: k-float 4.5s ease-in-out infinite; }
+.float-soft{ animation: k-float 4.8s ease-in-out infinite; }
 
-/* Spotlight yang mengikuti cursor (dipakai di hero wrapper) */
-.spotlight {
+/* Spotlight (used in hero wrapper) */
+.spotlight{
   position: relative;
   --mx: 50%;
   --my: 50%;
@@ -165,25 +269,26 @@ h1,h2,h3 { break-after: avoid; }
 .spotlight::after{
   content:"";
   pointer-events:none;
-  position:absolute; inset: -2px;
+  position:absolute;
+  inset: -2px;
   border-radius: 1.5rem;
   background:
     radial-gradient(600px 250px at var(--mx) var(--my),
-      rgba(255,255,255,.35), transparent 60%),
+      rgba(255,255,255,.28), transparent 60%),
     radial-gradient(800px 300px at calc(var(--mx) - 10%) calc(var(--my) + 10%),
-      rgba(56,189,248,.18), transparent 70%);
+      rgba(56,189,248,.14), transparent 70%);
   mix-blend-mode: soft-light;
-  transition: opacity .3s;
-  opacity: .6;
+  opacity: .55;
+  transition: opacity .25s ease;
 }
 
-/* Card interaktif (tilt) */
-.icard {
+/* Interactive card hover */
+.icard{
   transform-style: preserve-3d;
-  transition: transform .2s ease, box-shadow .3s ease, background-color .2s ease;
+  transition: transform .2s ease, box-shadow .25s ease, background-color .2s ease;
   will-change: transform;
 }
-.icard--hover:hover { box-shadow: 0 22px 60px -20px rgba(15, 23, 42, .25); }
-
-/* Elemen yang “naik” saat tilt (judul dll) */
-.lift { transform: translateZ(24px); }
+.icard--hover:hover{
+  box-shadow: 0 22px 60px -20px rgba(15, 23, 42, .22);
+}
+.lift{ transform: translateZ(18px); }
