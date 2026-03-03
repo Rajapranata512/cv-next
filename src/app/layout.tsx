@@ -1,12 +1,24 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Cinzel, Manrope } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
-const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
+const displayFont = Cinzel({
+  subsets: ["latin"],
+  weight: ["500", "700"],
+  variable: "--font-display",
+});
+
+const bodyFont = Manrope({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-body",
+});
 
 const siteUrl = "https://cv-next-pied.vercel.app";
+
+import { AdaptiveQualityProvider } from "@/components/ui/AdaptiveQualityProvider";
+import { AdaptiveVisualEffects } from "@/components/ui/AdaptiveVisualEffects";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -31,6 +43,8 @@ export const metadata: Metadata = {
   icons: { icon: "/favicon.ico" },
 };
 
+import { SmoothScroll } from "@/components/ui/SmoothScroll";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const jsonLd = {
     "@context": "https://schema.org",
@@ -50,30 +64,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className="h-full">
       <body
         className={[
-          geistSans.variable,
-          geistMono.variable,
-          // Tidak memaksa putih; warna diatur oleh .page-bg
-          "min-h-dvh text-slate-900 antialiased dark:text-slate-100",
-          "overflow-x-hidden",
+          displayFont.variable,
+          bodyFont.variable,
+          "min-h-dvh text-foreground antialiased selection:bg-primary/10",
+          "overflow-x-hidden focus:scroll-auto",
         ].join(" ")}
       >
-        {/* Latar halaman global (aurora + grain + edge glow) */}
-        <div className="page-bg fixed inset-0 -z-10" />
-        <div className="edge-left" />
-        <div className="edge-right" />
+        <AdaptiveQualityProvider>
+          <SmoothScroll>
+            <AdaptiveVisualEffects />
+            {/* JSON-LD */}
+            <script
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
 
-        {/* JSON-LD */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-
-        {/* Konten */}
-        {children}
-
-        <footer className="mt-12 py-8 text-center text-sm text-muted">
-          © {new Date().getFullYear()} Raja Adi Pranata 
-        </footer>
+            {/* Konten */}
+            {children}
+          </SmoothScroll>
+        </AdaptiveQualityProvider>
       </body>
     </html>
   );

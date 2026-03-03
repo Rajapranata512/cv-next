@@ -2,6 +2,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { SiWhatsapp, SiFigma } from "react-icons/si";
 
 const PROFILE = {
@@ -76,7 +77,7 @@ export default function CVPage() {
          ========================= */}
       <section className={cls(CARD, PAD, "mb-5 no-print")}>
         <div className="flex flex-wrap items-start gap-5">
-          <img
+          <Image
             src="/avatar.jpg"
             width={92}
             height={92}
@@ -138,7 +139,7 @@ export default function CVPage() {
          ========================= */}
       <section className={cls(CARD, "print-only mb-3 p-3")}>
         <div className="flex items-start gap-3">
-          <img
+          <Image
             src="/avatar.jpg"
             width={56}
             height={56}
@@ -375,7 +376,7 @@ export default function CVPage() {
             </ul>
           </article>
 
-          <article className="avoid-break mb-0 print:mb-0">
+          <article className="avoid-break mb-3 print:mb-2">
             <div className="flex items-baseline justify-between gap-3">
               <h3 className="font-semibold text-slate-900">Kripuk.com</h3>
               <span className={cls("text-sm print:text-[10px]", MUTED)}>2025</span>
@@ -386,6 +387,23 @@ export default function CVPage() {
                 Live:&nbsp;
                 <a className={A} href="https://kripuk-website-binus.vercel.app/" target="_blank" rel="noreferrer">
                   kripuk-website-binus.vercel.app
+                </a>
+              </li>
+            </ul>
+          </article>
+
+          <article className="avoid-break mb-0 print:mb-0">
+            <div className="flex items-baseline justify-between gap-3">
+              <h3 className="font-semibold text-slate-900">Foodies | Food-themed Web Project</h3>
+              <span className={cls("text-sm print:text-[10px]", MUTED)}>2026</span>
+            </div>
+            <ul className="mt-1 list-disc ps-5 space-y-1 print:space-y-0.5">
+              <li className={LI}>Laravel web app for recipes with login/register and create-edit-delete recipe flow.</li>
+              <li className={LI}>Stack: PHP (Laravel 11), Blade, Tailwind CSS, Vite, SQLite/MySQL, InfinityFree.</li>
+              <li className={LI}>
+                Live:&nbsp;
+                <a className={A} href="https://foodies.infinityfreeapp.com/" target="_blank" rel="noreferrer">
+                  foodies.infinityfreeapp.com
                 </a>
               </li>
             </ul>

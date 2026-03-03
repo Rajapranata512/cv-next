@@ -24,6 +24,13 @@ export const projects = [
     link: "#",
     highlights: ["Multi-page App Router", "Form validation", "Responsive design"],
   },
+  {
+    title: "Foodies",
+    desc: "Laravel-based recipe platform with authentication and full CRUD for recipe management.",
+    stack: ["Laravel", "PHP", "Blade", "Tailwind", "SQLite/MySQL"],
+    link: "https://foodies.infinityfreeapp.com/",
+    highlights: ["Auth flow (login/register)", "Recipe CRUD features", "Live deployment on InfinityFree"],
+  },
 ]
 
 export const experience = [
