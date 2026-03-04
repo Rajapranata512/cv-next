@@ -1,14 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type FocusEvent as ReactFocusEvent,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import {
   AnimatePresence,
   motion,
+  useMotionValueEvent,
   useReducedMotion,
   useScroll,
   useSpring,
   useTransform,
+  useMotionTemplate,
   type MotionValue,
 } from "framer-motion";
 import {
@@ -21,11 +32,16 @@ import {
   Mail,
   SkipForward,
   Sparkles,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAdaptiveQuality, type QualityLevel } from "@/components/ui/AdaptiveQualityProvider";
 
+const Scene3D = dynamic(() => import("@/components/ui/Scene3D").then((m) => m.Scene3D), { ssr: false });
+
 type Chapter = { year: string; title: string; text: string };
+type AudioPreset = "soft" | "epic";
 type ProjectMood = {
   tone: "gourmet" | "sonic" | "executive" | "arcade";
   aura: [string, string];
@@ -50,6 +66,21 @@ type Project = {
 type SceneTone = "amber" | "rose" | "cyan";
 type SceneId = "intro" | "journey" | "skills" | "projects" | "contact";
 type StorySection = { id: SceneId; label: string; cue: string; code: string };
+type ScenePalette = {
+  primary: string;
+  secondary: string;
+  accent: string;
+  cue: string;
+};
+type AudioEngine = {
+  context: AudioContext;
+  analyser: AnalyserNode;
+  gain: GainNode;
+  filter: BiquadFilterNode;
+  oscA: OscillatorNode;
+  oscB: OscillatorNode;
+  data: Uint8Array;
+};
 
 const chapters: Chapter[] = [
   { year: "2022", title: "The First Frame", text: "Started as a CS & Statistics student, learning to turn data into stories." },
@@ -154,6 +185,43 @@ const storySections: StorySection[] = [
   { id: "projects", label: "Project Reels", cue: "Featured work", code: "SCN-04" },
   { id: "contact", label: "Final Scene", cue: "Call to action", code: "SCN-05" },
 ];
+const scenePalettes: Record<SceneId, ScenePalette> = {
+  intro: { primary: "#f59e0b", secondary: "#38bdf8", accent: "#fbbf24", cue: "Opening Frame" },
+  journey: { primary: "#fb923c", secondary: "#f97316", accent: "#f59e0b", cue: "Character Arc" },
+  skills: { primary: "#38bdf8", secondary: "#22d3ee", accent: "#7dd3fc", cue: "Technique Reel" },
+  projects: { primary: "#fb7185", secondary: "#38bdf8", accent: "#f472b6", cue: "Showcase Sequence" },
+  contact: { primary: "#22d3ee", secondary: "#fbbf24", accent: "#38bdf8", cue: "Closing Credits" },
+};
+
+function colorWithAlpha(color: string, alpha: number): string {
+  const safeAlpha = Math.min(1, Math.max(0, alpha));
+  const value = color.trim();
+
+  if (value.startsWith("#")) {
+    let hex = value.slice(1);
+    if (hex.length === 3) {
+      hex = hex
+        .split("")
+        .map((char) => char + char)
+        .join("");
+    }
+
+    if (hex.length === 6) {
+      const r = Number.parseInt(hex.slice(0, 2), 16);
+      const g = Number.parseInt(hex.slice(2, 4), 16);
+      const b = Number.parseInt(hex.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
+    }
+  }
+
+  const rgb = value.match(/^rgba?\(([^)]+)\)$/i);
+  if (rgb) {
+    const [r = "255", g = "255", b = "255"] = rgb[1].split(",").map((item) => item.trim());
+    return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
+  }
+
+  return color;
+}
 
 function WordReveal({
   text,
@@ -206,20 +274,435 @@ function SceneDivider({ tone = "amber" }: { tone?: SceneTone }) {
   );
 }
 
-function SceneAtmosphere({ scene }: { scene: SceneId }) {
-  void scene;
-  return null;
+function SceneAtmosphere({ scene, enabled = true }: { scene: SceneId; enabled?: boolean }) {
+  if (!enabled) return null;
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={scene}
+        className={`scene-atmosphere scene-atmosphere-${scene} pointer-events-none fixed inset-0 z-[0]`}
+        initial={{ opacity: 0, scale: 1.02 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 1.05, ease: [0.22, 1, 0.36, 1] }}
+        aria-hidden
+      />
+    </AnimatePresence>
+  );
 }
 
-function SceneCutFlash({ cutToken }: { cutToken: number }) {
-  void cutToken;
-  return null;
+function SceneFusionLayer({
+  scene,
+  projectMood,
+  enabled = true,
+}: {
+  scene: SceneId;
+  projectMood: ProjectMood | null;
+  enabled?: boolean;
+}) {
+  const reducedMotion = useReducedMotion();
+  if (!enabled) return null;
+
+  const palette = scenePalettes[scene];
+  const fusionPrimary = projectMood?.aura[0] ?? colorWithAlpha(palette.primary, 0.32);
+  const fusionSecondary = projectMood?.aura[1] ?? colorWithAlpha(palette.secondary, 0.28);
+  const fusionAccent = colorWithAlpha(projectMood?.accent ?? palette.accent, 0.27);
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={`${scene}-${projectMood?.tone ?? "scene"}`}
+        className="scene-fusion pointer-events-none fixed inset-0 z-[4]"
+        style={
+          {
+            "--fusion-primary": fusionPrimary,
+            "--fusion-secondary": fusionSecondary,
+            "--fusion-accent": fusionAccent,
+          } as CSSProperties
+        }
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+        aria-hidden
+      >
+        <motion.div
+          className="scene-fusion-core absolute inset-0"
+          animate={reducedMotion ? undefined : { scale: [1, 1.04, 1], rotate: [0, 1.2, 0] }}
+          transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div
+          className="scene-fusion-sweep absolute inset-0"
+          animate={reducedMotion ? undefined : { x: ["-8%", "8%", "-8%"], opacity: [0.44, 0.62, 0.44] }}
+          transition={{ duration: 10.5, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </motion.div>
+    </AnimatePresence>
+  );
 }
 
-function StoryHud({ activeScene, scrollYProgress }: { activeScene: SceneId; scrollYProgress: MotionValue<number> }) {
-  void activeScene;
-  void scrollYProgress;
-  return null;
+function SceneCutFlash({ cutToken, enabled = true }: { cutToken: number; enabled?: boolean }) {
+  const reducedMotion = useReducedMotion();
+  if (!enabled || reducedMotion) return null;
+  return (
+    <AnimatePresence>
+      {cutToken > 0 && (
+        <motion.div
+          key={cutToken}
+          className="scene-cut-flash pointer-events-none fixed inset-0 z-[170]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 0.7, 0] }}
+          transition={{ duration: 0.52, ease: "easeOut" }}
+          aria-hidden
+        >
+          <motion.div
+            className="scene-cut-flash-streak"
+            initial={{ x: "-55%", opacity: 0 }}
+            animate={{ x: "55%", opacity: [0, 0.8, 0] }}
+            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function StoryHud({
+  activeScene,
+  scrollYProgress,
+  enabled = true,
+}: {
+  activeScene: SceneId;
+  scrollYProgress: MotionValue<number>;
+  enabled?: boolean;
+}) {
+  const progress = useSpring(scrollYProgress, { stiffness: 90, damping: 24, restDelta: 0.001 });
+  const driftY = useTransform(scrollYProgress, [0, 1], [0, -24]);
+
+  if (!enabled) return null;
+
+  return (
+    <aside className="cinema-hud pointer-events-none fixed right-8 top-1/2 z-[136] hidden -translate-y-1/2 xl:block">
+      <motion.div style={{ y: driftY }} className="cinema-hud-shell">
+        <p className="cinema-hud-kicker">Story Chapters</p>
+        <div className="cinema-hud-track-wrap">
+          <div className="cinema-hud-track">
+            <motion.span className="cinema-hud-track-fill" style={{ scaleY: progress }} />
+          </div>
+        </div>
+        <ul className="mt-4 space-y-2">
+          {storySections.map((section) => (
+            <li key={section.id}>
+              <a
+                href={`#${section.id}`}
+                className={`cinema-hud-link pointer-events-auto ${section.id === activeScene ? "is-active" : ""}`}
+              >
+                <span className="cinema-hud-code">{section.code}</span>
+                <span className="cinema-hud-label">{section.label}</span>
+                <span className="cinema-hud-cue">{section.cue}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </motion.div>
+    </aside>
+  );
+}
+
+function ProjectDirectorCue({
+  scene,
+  project,
+  enabled = true,
+}: {
+  scene: SceneId;
+  project: Project | null;
+  enabled?: boolean;
+}) {
+  if (!enabled) return null;
+
+  const sceneMeta = storySections.find((section) => section.id === scene);
+  const cueAccent = project?.mood.accent ?? scenePalettes[scene].accent;
+  const CueIcon = project?.icon ?? Film;
+
+  return (
+    <aside className="pointer-events-none fixed bottom-4 right-4 z-[205] hidden md:block">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={project ? `project-${project.title}` : `scene-${scene}`}
+          className="project-director-cue"
+          style={
+            {
+              "--cue-accent": cueAccent,
+              "--cue-accent-soft": colorWithAlpha(cueAccent, 0.23),
+            } as CSSProperties
+          }
+          initial={{ opacity: 0, y: 20, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 14, scale: 0.985 }}
+          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div className="project-director-icon">
+            <CueIcon className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="project-director-code">{project ? "PROJECT MOOD LIVE" : (sceneMeta?.code ?? "SCN-00")}</p>
+            <p className="project-director-title">{project ? project.title : scenePalettes[scene].cue}</p>
+            <p className="project-director-text">
+              {project ? "Tone sinkron ke atmosfer global dan layer reaktif." : (sceneMeta?.cue ?? "Story transition active.")}
+            </p>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    </aside>
+  );
+}
+
+function SceneCaption({
+  scene,
+  project,
+  enabled = true,
+}: {
+  scene: SceneId;
+  project: Project | null;
+  enabled?: boolean;
+}) {
+  if (!enabled) return null;
+
+  const sceneMeta = storySections.find((section) => section.id === scene);
+  const palette = scenePalettes[scene];
+  const accent = project?.mood.accent ?? palette.accent;
+  const subtitle = project ? `Highlighting ${project.title}` : (sceneMeta?.cue ?? "Story cue");
+
+  return (
+    <aside className="pointer-events-none fixed left-4 top-24 z-[134] hidden lg:block">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={project ? `caption-${scene}-${project.title}` : `caption-${scene}`}
+          className="scene-caption-shell"
+          style={
+            {
+              "--caption-accent": accent,
+              "--caption-accent-soft": colorWithAlpha(accent, 0.22),
+            } as CSSProperties
+          }
+          initial={{ opacity: 0, x: -18, y: 8 }}
+          animate={{ opacity: 1, x: 0, y: 0 }}
+          exit={{ opacity: 0, x: -12, y: -6 }}
+          transition={{ duration: 0.46, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div className="scene-caption-line" aria-hidden />
+          <p className="scene-caption-code">{sceneMeta?.code ?? "SCN-00"}</p>
+          <p className="scene-caption-title">{sceneMeta?.label ?? "Scene"}</p>
+          <p className="scene-caption-cue">{subtitle}</p>
+        </motion.div>
+      </AnimatePresence>
+    </aside>
+  );
+}
+
+function ProjectReelCard({
+  project,
+  idx,
+  immersiveMode,
+  reducedMotion,
+  isActive,
+  onActivate,
+  onDeactivate,
+}: {
+  project: Project;
+  idx: number;
+  immersiveMode: boolean;
+  reducedMotion: boolean;
+  isActive: boolean;
+  onActivate: () => void;
+  onDeactivate: () => void;
+}) {
+  const Icon = project.icon;
+  const tiltX = useSpring(0, { stiffness: 180, damping: 22, mass: 0.34 });
+  const tiltY = useSpring(0, { stiffness: 180, damping: 22, mass: 0.34 });
+  const spotlightX = useSpring(50, { stiffness: 210, damping: 24, mass: 0.28 });
+  const spotlightY = useSpring(40, { stiffness: 210, damping: 24, mass: 0.28 });
+  const hoverLift = useSpring(0, { stiffness: 200, damping: 24, mass: 0.32 });
+  const spotlightOpacity = useTransform(hoverLift, [0, 1], [0.04, 0.95]);
+  const spotlightGradient = useMotionTemplate`radial-gradient(260px circle at ${spotlightX}% ${spotlightY}%, ${colorWithAlpha(project.mood.accent, 0.42)} 0%, transparent 74%)`;
+
+  const resetKinetics = useCallback(() => {
+    tiltX.set(0);
+    tiltY.set(0);
+    hoverLift.set(0);
+    spotlightX.set(50);
+    spotlightY.set(40);
+  }, [hoverLift, spotlightX, spotlightY, tiltX, tiltY]);
+
+  const handlePointerMove = useCallback(
+    (event: ReactPointerEvent<HTMLElement>) => {
+      if (reducedMotion || !immersiveMode) return;
+      const rect = event.currentTarget.getBoundingClientRect();
+      const ratioX = (event.clientX - rect.left) / rect.width;
+      const ratioY = (event.clientY - rect.top) / rect.height;
+      const maxX = project.mood.hover.rotateX + 2.1;
+      const maxY = Math.abs(project.mood.hover.rotateY) + 2.8;
+
+      spotlightX.set(ratioX * 100);
+      spotlightY.set(ratioY * 100);
+      tiltX.set((0.5 - ratioY) * maxX * 2);
+      tiltY.set((ratioX - 0.5) * maxY * 2);
+    },
+    [immersiveMode, project.mood.hover.rotateX, project.mood.hover.rotateY, reducedMotion, spotlightX, spotlightY, tiltX, tiltY],
+  );
+
+  const handleActivate = useCallback(() => {
+    onActivate();
+    if (reducedMotion || !immersiveMode) return;
+    hoverLift.set(1);
+  }, [hoverLift, immersiveMode, onActivate, reducedMotion]);
+
+  const handleDeactivate = useCallback(() => {
+    onDeactivate();
+    resetKinetics();
+  }, [onDeactivate, resetKinetics]);
+
+  const handleBlurCapture = useCallback(
+    (event: ReactFocusEvent<HTMLElement>) => {
+      const next = event.relatedTarget;
+      if (next instanceof Node && event.currentTarget.contains(next)) return;
+      handleDeactivate();
+    },
+    [handleDeactivate],
+  );
+
+  const cardStyle = {
+    "--project-aura-1": project.mood.aura[0],
+    "--project-aura-2": project.mood.aura[1],
+    "--project-sheen": project.mood.sheen,
+    "--project-overlay-top": project.mood.overlay[0],
+    "--project-overlay-bottom": project.mood.overlay[1],
+    "--project-accent": project.mood.accent,
+    "--project-accent-soft": colorWithAlpha(project.mood.accent, 0.38),
+    "--project-icon": project.mood.icon,
+    "--project-chip-bg": project.mood.chipBg,
+    "--project-chip-border": project.mood.chipBorder,
+    "--project-aura-speed": `${project.mood.auraSpeed}s`,
+  } as CSSProperties;
+
+  return (
+    <motion.article
+      className={[
+        `project-card project-tone-${project.mood.tone} project-card-kinetic group cinema-panel relative overflow-hidden rounded-3xl border border-white/15`,
+        isActive ? "is-active-project" : "",
+      ].join(" ")}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.25 }}
+      transition={{ duration: 0.55, delay: idx * 0.06 }}
+      onPointerEnter={handleActivate}
+      onPointerLeave={handleDeactivate}
+      onPointerMove={handlePointerMove}
+      onFocusCapture={handleActivate}
+      onBlurCapture={handleBlurCapture}
+      onPointerDown={handleActivate}
+      whileHover={
+        reducedMotion
+          ? undefined
+          : immersiveMode
+            ? { y: project.mood.hover.y, scale: project.mood.hover.scale }
+            : { y: -4, scale: 1.008 }
+      }
+      style={{
+        ...cardStyle,
+        transformPerspective: immersiveMode ? 1200 : 900,
+        transformStyle: "preserve-3d",
+        rotateX: immersiveMode ? tiltX : 0,
+        rotateY: immersiveMode ? tiltY : 0,
+      }}
+    >
+      {immersiveMode && <div className="project-card-aura" aria-hidden />}
+      {immersiveMode && <div className="project-card-sheen" aria-hidden />}
+      {immersiveMode && <motion.div className="project-card-spotlight" style={{ opacity: spotlightOpacity, backgroundImage: spotlightGradient }} aria-hidden />}
+      <div className="relative aspect-[16/10] overflow-hidden">
+        <Image src={project.image} alt={`${project.title} preview`} fill className="object-cover transition duration-700 group-hover:scale-110" />
+        <div className="project-card-overlay absolute inset-0" />
+        <div className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-black/35">
+          <Icon className="h-5 w-5" style={{ color: "var(--project-icon)" }} />
+        </div>
+      </div>
+      <div className="space-y-4 p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-cinema-display text-2xl text-[#fff5e6]">{project.title}</h3>
+            <p className="project-tone-label mt-1 text-[0.62rem] uppercase tracking-[0.18em] text-[#f8eddc]/62">
+              Mood: {project.mood.tone}
+            </p>
+          </div>
+          <a
+            href={project.link}
+            target="_blank"
+            rel="noreferrer"
+            className="project-card-visit inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/25 text-[#f8ead4] transition"
+            aria-label={`Visit ${project.title}`}
+          >
+            <ExternalLink className="h-4 w-4" />
+          </a>
+        </div>
+        <p className="text-sm leading-relaxed text-[#f8eddc]/80">{project.description}</p>
+        <div className="flex flex-wrap gap-2">
+          {project.tags.map((tag) => (
+            <span key={tag} className="project-chip rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.12em] text-[#f8eddc]/78">
+              {tag}
+            </span>
+          ))}
+        </div>
+      </div>
+    </motion.article>
+  );
+}
+
+function InteractiveHalo({ enabled = true }: { enabled?: boolean }) {
+  const reducedMotion = useReducedMotion();
+  const haloX = useSpring(0, { stiffness: 120, damping: 24, mass: 0.3 });
+  const haloY = useSpring(0, { stiffness: 120, damping: 24, mass: 0.3 });
+
+  useEffect(() => {
+    if (!enabled || reducedMotion) return undefined;
+
+    const setCenter = () => {
+      haloX.set(window.innerWidth * 0.5);
+      haloY.set(window.innerHeight * 0.36);
+    };
+
+    let raf = 0;
+    const handleMove = (event: PointerEvent) => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        haloX.set(event.clientX);
+        haloY.set(event.clientY);
+      });
+    };
+
+    const handleLeave = () => setCenter();
+    setCenter();
+
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerleave", handleLeave);
+    window.addEventListener("blur", handleLeave);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerleave", handleLeave);
+      window.removeEventListener("blur", handleLeave);
+    };
+  }, [enabled, reducedMotion, haloX, haloY]);
+
+  if (!enabled || reducedMotion) return null;
+
+  return (
+    <motion.div
+      className="cinema-interactive-halo pointer-events-none fixed left-[-16rem] top-[-16rem] z-[3] h-[32rem] w-[32rem] rounded-full"
+      style={{ x: haloX, y: haloY }}
+      aria-hidden
+    />
+  );
 }
 
 function CinematicPreloader({ onFinish, quality }: { onFinish: () => void; quality: QualityLevel }) {
@@ -290,10 +773,345 @@ function CinematicPreloader({ onFinish, quality }: { onFinish: () => void; quali
     </motion.div>
   );
 }
-function ScrollReactiveLayer({ scrollYProgress, quality }: { scrollYProgress: MotionValue<number>; quality: QualityLevel }) {
-  void scrollYProgress;
-  void quality;
-  return null;
+function ScrollReactiveLayer({
+  scrollYProgress,
+  quality,
+  scene,
+  projectMood,
+}: {
+  scrollYProgress: MotionValue<number>;
+  quality: QualityLevel;
+  scene: SceneId;
+  projectMood: ProjectMood | null;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const scrollLevelRef = useRef(0);
+  const audioEngineRef = useRef<AudioEngine | null>(null);
+  const [audioEnabled, setAudioEnabled] = useState(false);
+  const [audioPreset, setAudioPreset] = useState<AudioPreset>("epic");
+  const reducedMotion = useReducedMotion();
+  const scenePalette = scenePalettes[scene];
+  const moodPrimary = projectMood?.icon ?? scenePalette.primary;
+  const moodSecondary = projectMood?.accent ?? scenePalette.accent;
+  const moodTertiary = projectMood?.tone === "arcade" ? "#fda4af" : (projectMood?.icon ?? scenePalette.secondary);
+
+  const getPresetConfig = useCallback((preset: AudioPreset) => {
+    if (preset === "epic") {
+      return {
+        oscAType: "sawtooth" as OscillatorType,
+        oscBType: "triangle" as OscillatorType,
+        oscABase: 86,
+        oscARange: 248,
+        harmonic: 1.66,
+        filterBase: 420,
+        filterRange: 1980,
+        gainOn: 0.021,
+        gainBase: 0.0115,
+        gainRange: 0.012,
+        smooth: 0.9,
+        q: 1.05,
+        synthBlend: 0.88,
+        barBoost: 1.22,
+        waveBoost: 1.25,
+        palette: ["rgba(56, 189, 248, 0.98)", "rgba(251, 191, 36, 0.84)", "rgba(251, 113, 133, 0.9)"] as const,
+      };
+    }
+
+    return {
+      oscAType: "triangle" as OscillatorType,
+      oscBType: "sine" as OscillatorType,
+      oscABase: 74,
+      oscARange: 176,
+      harmonic: 1.46,
+      filterBase: 320,
+      filterRange: 1180,
+      gainOn: 0.013,
+      gainBase: 0.0076,
+      gainRange: 0.0078,
+      smooth: 0.82,
+      q: 0.78,
+      synthBlend: 0.62,
+      barBoost: 0.82,
+      waveBoost: 0.86,
+      palette: ["rgba(125, 211, 252, 0.92)", "rgba(186, 230, 253, 0.75)", "rgba(244, 244, 245, 0.68)"] as const,
+    };
+  }, []);
+
+  useMotionValueEvent(scrollYProgress, "change", (latest) => {
+    scrollLevelRef.current = latest;
+  });
+
+  const createAudioEngine = useCallback((): AudioEngine | null => {
+    if (typeof window === "undefined") return null;
+
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return null;
+    const cfg = getPresetConfig(audioPreset);
+
+    const context = new AudioContextClass();
+    const analyser = context.createAnalyser();
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = cfg.smooth;
+
+    const filter = context.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = cfg.filterBase;
+    filter.Q.value = cfg.q;
+
+    const gain = context.createGain();
+    gain.gain.value = 0.00001;
+
+    const oscA = context.createOscillator();
+    oscA.type = cfg.oscAType;
+    oscA.frequency.value = cfg.oscABase;
+
+    const oscB = context.createOscillator();
+    oscB.type = cfg.oscBType;
+    oscB.frequency.value = cfg.oscABase * cfg.harmonic;
+
+    oscA.connect(filter);
+    oscB.connect(filter);
+    filter.connect(gain);
+    gain.connect(analyser);
+    analyser.connect(context.destination);
+
+    oscA.start();
+    oscB.start();
+
+    const data = new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>;
+    return { context, analyser, gain, filter, oscA, oscB, data };
+  }, [audioPreset, getPresetConfig]);
+
+  const disposeAudio = useCallback(async () => {
+    const engine = audioEngineRef.current;
+    if (!engine) return;
+
+    const { context, gain, oscA, oscB } = engine;
+    const now = context.currentTime;
+    gain.gain.cancelScheduledValues(now);
+    gain.gain.setTargetAtTime(0.00001, now, 0.12);
+
+    try {
+      oscA.stop(now + 0.2);
+      oscB.stop(now + 0.2);
+    } catch {
+      // no-op
+    }
+
+    setTimeout(() => {
+      void context.close();
+    }, 260);
+
+    audioEngineRef.current = null;
+  }, []);
+
+  const handleToggleAudio = useCallback(async () => {
+    if (audioEnabled) {
+      setAudioEnabled(false);
+      await disposeAudio();
+      return;
+    }
+
+    let engine = audioEngineRef.current;
+    if (!engine) {
+      engine = createAudioEngine();
+      if (!engine) return;
+      audioEngineRef.current = engine;
+    }
+
+    await engine.context.resume();
+    const now = engine.context.currentTime;
+    const cfg = getPresetConfig(audioPreset);
+    engine.gain.gain.cancelScheduledValues(now);
+    engine.gain.gain.linearRampToValueAtTime(cfg.gainOn, now + 0.38);
+    setAudioEnabled(true);
+  }, [audioEnabled, audioPreset, createAudioEngine, disposeAudio, getPresetConfig]);
+
+  useEffect(() => {
+    const engine = audioEngineRef.current;
+    if (!engine) return;
+    const cfg = getPresetConfig(audioPreset);
+    const now = engine.context.currentTime;
+
+    engine.oscA.type = cfg.oscAType;
+    engine.oscB.type = cfg.oscBType;
+    engine.filter.Q.value = cfg.q;
+    engine.analyser.smoothingTimeConstant = cfg.smooth;
+    engine.filter.frequency.setTargetAtTime(cfg.filterBase + scrollLevelRef.current * cfg.filterRange, now, 0.16);
+    engine.gain.gain.setTargetAtTime(audioEnabled ? cfg.gainBase + scrollLevelRef.current * cfg.gainRange : 0.00001, now, 0.2);
+  }, [audioEnabled, audioPreset, getPresetConfig]);
+
+  useEffect(() => {
+    if (!audioEnabled) return undefined;
+
+    const cfg = getPresetConfig(audioPreset);
+    let raf = 0;
+    const modulate = () => {
+      const engine = audioEngineRef.current;
+      if (engine) {
+        const level = scrollLevelRef.current;
+        const now = engine.context.currentTime;
+        const base = cfg.oscABase + level * cfg.oscARange;
+
+        engine.oscA.frequency.setTargetAtTime(base, now, 0.12);
+        engine.oscB.frequency.setTargetAtTime(base * cfg.harmonic, now, 0.12);
+        engine.filter.frequency.setTargetAtTime(cfg.filterBase + level * cfg.filterRange, now, 0.18);
+        engine.gain.gain.setTargetAtTime(cfg.gainBase + level * cfg.gainRange, now, 0.2);
+      }
+
+      raf = requestAnimationFrame(modulate);
+    };
+
+    raf = requestAnimationFrame(modulate);
+    return () => cancelAnimationFrame(raf);
+  }, [audioEnabled, audioPreset, getPresetConfig]);
+
+  useEffect(() => {
+    return () => {
+      void disposeAudio();
+    };
+  }, [disposeAudio]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return undefined;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return undefined;
+
+    const cfg = getPresetConfig(audioPreset);
+    let raf = 0;
+    const resize = () => {
+      const dprCap = quality === "high" ? 2 : 1.5;
+      const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
+      const width = window.innerWidth;
+      const height = Math.max(120, Math.round(window.innerHeight * 0.28));
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    const draw = () => {
+      const width = canvas.clientWidth || window.innerWidth;
+      const height = canvas.clientHeight || Math.round(window.innerHeight * 0.28);
+      const level = scrollLevelRef.current;
+      const time = performance.now() * 0.0014;
+      const horizon = Math.min(220, height * 0.9);
+      const midY = horizon * 0.56;
+
+      ctx.clearRect(0, 0, width, height);
+
+      const wash = ctx.createLinearGradient(0, 0, 0, horizon);
+      wash.addColorStop(0, colorWithAlpha(moodSecondary, 0.08 + level * (audioPreset === "epic" ? 0.22 : 0.16)));
+      wash.addColorStop(0.56, colorWithAlpha(moodPrimary, 0.06 + level * 0.11));
+      wash.addColorStop(1, "rgba(12, 18, 28, 0)");
+      ctx.fillStyle = wash;
+      ctx.fillRect(0, 0, width, horizon);
+
+      const engine = audioEngineRef.current;
+      const freqData = engine && audioEnabled ? engine.data : null;
+      if (freqData && engine) engine.analyser.getByteFrequencyData(freqData as Uint8Array<ArrayBuffer>);
+
+      const barCount = Math.max(18, Math.floor(width / 32));
+      const step = width / barCount;
+      const barWidth = Math.max(2.5, step * 0.5);
+
+      for (let index = 0; index < barCount; index += 1) {
+        const freqIndex = freqData ? Math.floor((index / barCount) * freqData.length) : 0;
+        const freqValue = freqData ? freqData[freqIndex] / 255 : 0;
+        const synthetic = (Math.sin(time * 2.8 + index * 0.36 + level * 8.5) + 1) / 2;
+        const amplitude = Math.max(freqValue, synthetic * (reducedMotion ? 0.35 : cfg.synthBlend));
+        const barHeight = 7 + amplitude * (24 + level * (reducedMotion ? 42 : 110 * cfg.barBoost));
+
+        const x = index * step + (step - barWidth) * 0.5;
+        const y = midY - barHeight * 0.5;
+
+        const gradient = ctx.createLinearGradient(0, y, 0, y + barHeight);
+        gradient.addColorStop(0, audioEnabled ? cfg.palette[0] : colorWithAlpha(moodPrimary, 0.9));
+        gradient.addColorStop(0.5, colorWithAlpha(moodSecondary, 0.85));
+        gradient.addColorStop(1, audioEnabled ? cfg.palette[2] : colorWithAlpha(moodTertiary, 0.8));
+
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, y, barWidth, barHeight);
+      }
+
+      ctx.beginPath();
+      for (let x = 0; x <= width; x += 8) {
+        const ratio = x / width;
+        const freqIndex = freqData ? Math.floor(ratio * (freqData.length - 1)) : 0;
+        const freqValue = freqData ? freqData[freqIndex] / 255 : 0;
+        const synthetic = (Math.sin(time * 3.1 + x * 0.023 + level * 7) + 1) / 2;
+        const amplitude = Math.max(freqValue, synthetic * cfg.synthBlend);
+        const waveY = midY + Math.sin(x * 0.02 + time * 4.6) * (4 + amplitude * (15 + level * 32 * cfg.waveBoost));
+
+        if (x === 0) ctx.moveTo(x, waveY);
+        else ctx.lineTo(x, waveY);
+      }
+      ctx.shadowBlur = reducedMotion ? 0 : 14 + level * 20;
+      ctx.shadowColor = colorWithAlpha(moodPrimary, 0.62);
+      ctx.strokeStyle = colorWithAlpha(moodSecondary, audioPreset === "epic" ? 0.24 + level * 0.43 : 0.17 + level * 0.36);
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      raf = requestAnimationFrame(draw);
+    };
+
+    window.addEventListener("resize", resize);
+    resize();
+    draw();
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      cancelAnimationFrame(raf);
+    };
+  }, [audioEnabled, audioPreset, getPresetConfig, moodPrimary, moodSecondary, moodTertiary, quality, reducedMotion]);
+
+  return (
+    <>
+      <canvas ref={canvasRef} className="pointer-events-none fixed left-0 right-0 top-0 z-[90] opacity-80" />
+      <div className="pointer-events-auto fixed bottom-4 left-4 z-[200] md:bottom-6 md:left-6">
+        <button
+          type="button"
+          onClick={handleToggleAudio}
+          className="audio-pulse-toggle inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/45 px-4 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[#f8eddc] backdrop-blur-xl transition hover:bg-white/10"
+          style={{
+            borderColor: colorWithAlpha(moodSecondary, 0.42),
+            boxShadow: `0 8px 26px ${colorWithAlpha(moodSecondary, 0.2)}`,
+          }}
+        >
+          {audioEnabled ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+          {audioEnabled ? "Disable Pulse Audio" : "Enable Pulse Audio"}
+        </button>
+        <div className="mt-2 inline-flex items-center gap-1 rounded-full border border-white/20 bg-black/40 p-1 backdrop-blur-xl">
+          {(["soft", "epic"] as const).map((preset) => {
+            const active = audioPreset === preset;
+            return (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => setAudioPreset(preset)}
+                className={[
+                  "rounded-full px-3 py-1 text-[0.58rem] font-semibold uppercase tracking-[0.14em] transition",
+                  active ? "bg-white/18 text-[#fff5e5]" : "text-[#f8eddc]/72 hover:bg-white/10 hover:text-[#fff5e5]",
+                ].join(" ")}
+                aria-pressed={active}
+              >
+                {preset}
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-1 text-[0.58rem] uppercase tracking-[0.14em] text-[#f8eddc]/60">
+          Pulse Preset: {audioPreset === "epic" ? "Epic" : "Soft"}
+        </p>
+        <p className="mt-2 text-[0.6rem] uppercase tracking-[0.14em] text-[#f8eddc]/62">No autoplay. Manual trigger only.</p>
+      </div>
+    </>
+  );
 }
 export default function Home() {
   const { scrollYProgress } = useScroll();
@@ -304,11 +1122,60 @@ export default function Home() {
   const scaleX = useSpring(scrollYProgress, { stiffness: 90, damping: 22, restDelta: 0.001 });
   const heroY = useTransform(scrollYProgress, [0, 0.25], [0, -140]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.28], [1, 0.38]);
+  const cameraSpring = { stiffness: 92, damping: 24, mass: 0.54, restDelta: 0.001 };
+  const introCamY = useSpring(useTransform(scrollYProgress, [0, 0.2, 0.35], [0, -62, -128]), cameraSpring);
+  const introCamScale = useSpring(useTransform(scrollYProgress, [0, 0.34], [1, 0.975]), cameraSpring);
+  const introCamTilt = useSpring(useTransform(scrollYProgress, [0, 0.32], [0, -2.6]), cameraSpring);
+  const journeyCamY = useSpring(useTransform(scrollYProgress, [0.08, 0.28, 0.46], [116, 0, -82]), cameraSpring);
+  const journeyCamScale = useSpring(useTransform(scrollYProgress, [0.08, 0.28, 0.46], [0.955, 1, 0.985]), cameraSpring);
+  const journeyCamTilt = useSpring(useTransform(scrollYProgress, [0.08, 0.28, 0.46], [2.8, 0, -2]), cameraSpring);
+  const skillsCamY = useSpring(useTransform(scrollYProgress, [0.3, 0.5, 0.68], [96, 0, -72]), cameraSpring);
+  const skillsCamScale = useSpring(useTransform(scrollYProgress, [0.3, 0.5, 0.68], [0.96, 1, 0.986]), cameraSpring);
+  const skillsCamTilt = useSpring(useTransform(scrollYProgress, [0.3, 0.5, 0.68], [2.4, 0, -1.7]), cameraSpring);
+  const projectsCamY = useSpring(useTransform(scrollYProgress, [0.52, 0.72, 0.9], [106, 0, -94]), cameraSpring);
+  const projectsCamScale = useSpring(useTransform(scrollYProgress, [0.52, 0.72, 0.9], [0.953, 1, 0.982]), cameraSpring);
+  const projectsCamTilt = useSpring(useTransform(scrollYProgress, [0.52, 0.72, 0.9], [2.8, 0, -2.3]), cameraSpring);
+  const contactCamY = useSpring(useTransform(scrollYProgress, [0.78, 0.94, 1], [88, 0, -30]), cameraSpring);
+  const contactCamScale = useSpring(useTransform(scrollYProgress, [0.78, 0.94], [0.965, 1]), cameraSpring);
+  const contactCamTilt = useSpring(useTransform(scrollYProgress, [0.78, 0.96], [1.8, 0]), cameraSpring);
 
   const [preloading, setPreloading] = useState(true);
   const [activeScene, setActiveScene] = useState<SceneId>("intro");
   const [cutToken, setCutToken] = useState(0);
+  const [activeProjectIndex, setActiveProjectIndex] = useState<number | null>(null);
+  const [immersiveMode, setImmersiveMode] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      return window.localStorage.getItem("cinema-immersive") !== "off";
+    } catch {
+      return true;
+    }
+  });
   const finishPreloader = useCallback(() => setPreloading((p) => (p ? false : p)), []);
+  const activeProject = immersiveMode && activeProjectIndex !== null ? (projects[activeProjectIndex] ?? null) : null;
+  const activePalette = scenePalettes[activeScene];
+  const accentColor = activeProject?.mood.accent ?? activePalette.accent;
+  const secondaryColor = activeProject?.mood.icon ?? activePalette.secondary;
+  const progressGradient = `linear-gradient(90deg, ${colorWithAlpha(activePalette.primary, 0.95)}, ${colorWithAlpha(accentColor, 0.95)}, ${colorWithAlpha(secondaryColor, 0.95)})`;
+  const cameraEnabled = immersiveMode && quality === "high" && !reducedMotion;
+  const rootStyle = {
+    "--scene-accent": accentColor,
+    "--scene-accent-soft": colorWithAlpha(accentColor, 0.24),
+    "--scene-secondary": secondaryColor,
+  } as CSSProperties;
+  const introCameraStyle = cameraEnabled ? { y: introCamY, scale: introCamScale, rotateX: introCamTilt } : undefined;
+  const journeyCameraStyle = cameraEnabled ? { y: journeyCamY, scale: journeyCamScale, rotateX: journeyCamTilt } : undefined;
+  const skillsCameraStyle = cameraEnabled ? { y: skillsCamY, scale: skillsCamScale, rotateX: skillsCamTilt } : undefined;
+  const projectsCameraStyle = cameraEnabled ? { y: projectsCamY, scale: projectsCamScale, rotateX: projectsCamTilt } : undefined;
+  const contactCameraStyle = cameraEnabled ? { y: contactCamY, scale: contactCamScale, rotateX: contactCamTilt } : undefined;
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("cinema-immersive", immersiveMode ? "on" : "off");
+    } catch {
+      // no-op
+    }
+  }, [immersiveMode]);
 
   useEffect(() => {
     activeSceneRef.current = activeScene;
@@ -345,7 +1212,7 @@ export default function Home() {
         if (max > 0) {
           setActiveScene((prev) => {
             if (prev === next) return prev;
-            setCutToken((value) => value + 1);
+            if (immersiveMode) setCutToken((value) => value + 1);
             return next;
           });
         }
@@ -355,7 +1222,7 @@ export default function Home() {
 
     nodes.forEach(({ node }) => observer.observe(node));
     return () => observer.disconnect();
-  }, [preloading]);
+  }, [immersiveMode, preloading]);
 
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -368,33 +1235,100 @@ export default function Home() {
   return (
     <>
       <AnimatePresence>{preloading && <CinematicPreloader onFinish={finishPreloader} quality={quality} />}</AnimatePresence>
-      <main className={`cinema-root quality-${quality} relative min-h-screen overflow-x-clip text-[#f9f3e7]`}>
-        <SceneAtmosphere scene={activeScene} />
-        {!preloading && <SceneCutFlash cutToken={cutToken} />}
-        <StoryHud activeScene={activeScene} scrollYProgress={scrollYProgress} />
-        {!preloading && <ScrollReactiveLayer scrollYProgress={scrollYProgress} quality={quality} />}
+      <main
+        className={[
+          `cinema-root quality-${quality} relative min-h-screen overflow-x-clip text-[#f9f3e7]`,
+          immersiveMode ? "immersive-on" : "immersive-off",
+        ].join(" ")}
+        style={rootStyle}
+      >
+        <SceneAtmosphere scene={activeScene} enabled={immersiveMode} />
+        <SceneFusionLayer scene={activeScene} projectMood={activeProject?.mood ?? null} enabled={immersiveMode} />
+        {!preloading && <SceneCutFlash cutToken={cutToken} enabled={immersiveMode} />}
+        {!preloading && <SceneCaption scene={activeScene} project={activeProject} enabled={immersiveMode} />}
+        <StoryHud activeScene={activeScene} scrollYProgress={scrollYProgress} enabled={immersiveMode} />
+        {!preloading && immersiveMode && (
+          <ScrollReactiveLayer
+            scrollYProgress={scrollYProgress}
+            quality={quality}
+            scene={activeScene}
+            projectMood={activeProject?.mood ?? null}
+          />
+        )}
+        <ProjectDirectorCue scene={activeScene} project={activeProject} enabled={immersiveMode} />
+        <InteractiveHalo enabled={immersiveMode} />
+        {immersiveMode && <div className="cinema-letterbox cinema-letterbox-top pointer-events-none fixed inset-x-0 top-0 z-[100]" />}
+        {immersiveMode && <div className="cinema-letterbox cinema-letterbox-bottom pointer-events-none fixed inset-x-0 bottom-0 z-[100]" />}
+        {immersiveMode && <div className="cinema-vignette pointer-events-none fixed inset-0 z-[1]" />}
+        {immersiveMode && <div className="cinema-grain pointer-events-none fixed inset-0 z-[2]" />}
 
         <motion.div
-          className="fixed left-0 right-0 top-0 z-[122] h-[3px] origin-left bg-[linear-gradient(90deg,#f59e0b,#fb7185,#38bdf8)]"
-          style={{ scaleX }}
+          className="fixed left-0 right-0 top-0 z-[122] h-[3px] origin-left"
+          style={{ scaleX, background: progressGradient }}
         />
 
         <header className="fixed left-0 right-0 top-0 z-[112] px-6 pt-5 md:px-10 lg:px-16">
-          <div className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-white/15 bg-black/35 px-5 py-3">
-            <p className="font-cinema-display text-sm tracking-[0.28em] text-[#facc15]">RAP</p>
+          <div className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-white/15 bg-black/35 px-5 py-3 backdrop-blur-xl">
+            <p className="font-cinema-display text-sm tracking-[0.28em]" style={{ color: "var(--scene-accent)" }}>RAP</p>
             <nav className="hidden items-center gap-6 text-[0.8rem] uppercase tracking-[0.18em] text-[#f8ede0]/80 sm:flex">
               <a href="#journey" className="transition hover:text-white">Journey</a>
               <a href="#skills" className="transition hover:text-white">Skills</a>
               <a href="#projects" className="transition hover:text-white">Projects</a>
               <a href="#contact" className="transition hover:text-white">Contact</a>
-              <span className="rounded-full border border-white/20 bg-white/5 px-2.5 py-1 text-[0.6rem] tracking-[0.14em] text-[#f8eddc]/70">
-                HIGH-END MODE
-              </span>
+              <button
+                type="button"
+                onClick={() => setImmersiveMode((prev) => !prev)}
+                className={[
+                  "rounded-full border px-2.5 py-1 text-[0.6rem] tracking-[0.14em] transition",
+                  immersiveMode
+                    ? "border-amber-200/35 bg-amber-300/10 text-amber-100"
+                    : "border-white/20 bg-white/5 text-[#f8eddc]/70 hover:bg-white/10",
+                ].join(" ")}
+              >
+                {immersiveMode ? "IMMERSIVE FX ON" : "IMMERSIVE FX OFF"}
+              </button>
             </nav>
+            <button
+              type="button"
+              onClick={() => setImmersiveMode((prev) => !prev)}
+              className={[
+                "rounded-full border px-2 py-1 text-[0.55rem] tracking-[0.12em] sm:hidden",
+                immersiveMode
+                  ? "border-amber-200/35 bg-amber-300/10 text-amber-100"
+                  : "border-white/20 bg-white/5 text-[#f8eddc]/70",
+              ].join(" ")}
+            >
+              {immersiveMode ? "FX ON" : "FX OFF"}
+            </button>
           </div>
         </header>
 
-        <section id="intro" data-scene-id="intro" className="relative isolate min-h-[100svh] px-6 pb-16 pt-28 md:px-10 md:pt-36 lg:px-16">
+        <motion.section
+          id="intro"
+          data-scene-id="intro"
+          className="scene-camera-stage scene-depth-intro relative isolate min-h-[100svh] px-6 pb-16 pt-28 md:px-10 md:pt-36 lg:px-16"
+          style={introCameraStyle}
+        >
+          {immersiveMode && (
+            <div className="pointer-events-none absolute inset-x-0 top-[-7rem] hidden h-[40rem] lg:block">
+              <Scene3D />
+            </div>
+          )}
+          {immersiveMode && (
+            <motion.div
+              className="cinema-light-orb cinema-light-orb-left"
+              animate={reducedMotion ? undefined : { x: [0, 18, 0], y: [0, -12, 0] }}
+              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+            />
+          )}
+          {immersiveMode && (
+            <motion.div
+              className="cinema-light-orb cinema-light-orb-right"
+              animate={reducedMotion ? undefined : { x: [0, -20, 0], y: [0, 16, 0] }}
+              transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
+            />
+          )}
+
           <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative z-10 mx-auto max-w-6xl">
             <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-200/30 bg-amber-300/10 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-amber-200">
               <Sparkles className="h-3.5 w-3.5" />
@@ -446,19 +1380,26 @@ export default function Home() {
             </div>
           </motion.div>
 
-          <motion.p
-            className="cinema-subtitle absolute inset-x-0 bottom-9 z-20 text-center text-[0.62rem] uppercase tracking-[0.25em] text-[#f8eddc]/60"
-            animate={reducedMotion ? undefined : { opacity: [0.35, 0.9, 0.35], y: [0, 2, 0] }}
-            transition={{ duration: 4.8, ease: "easeInOut", repeat: Infinity }}
-          >
-            Scroll to advance through each scene
-          </motion.p>
+          {immersiveMode && (
+            <motion.p
+              className="cinema-subtitle absolute inset-x-0 bottom-9 z-20 text-center text-[0.62rem] uppercase tracking-[0.25em] text-[#f8eddc]/60"
+              animate={reducedMotion ? undefined : { opacity: [0.35, 0.9, 0.35], y: [0, 2, 0] }}
+              transition={{ duration: 4.8, ease: "easeInOut", repeat: Infinity }}
+            >
+              Scroll to advance through each scene
+            </motion.p>
+          )}
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-[linear-gradient(180deg,transparent,rgba(8,10,16,.92))]" />
-        </section>
+        </motion.section>
 
         <SceneDivider tone="amber" />
 
-        <section id="journey" data-scene-id="journey" className="relative z-10 px-6 py-24 md:px-10 lg:px-16">
+        <motion.section
+          id="journey"
+          data-scene-id="journey"
+          className="scene-camera-stage scene-depth-journey relative z-10 px-6 py-24 md:px-10 lg:px-16"
+          style={journeyCameraStyle}
+        >
           <div className="mx-auto max-w-6xl">
             <div className="mb-14 flex items-end justify-between gap-6">
               <div>
@@ -489,18 +1430,28 @@ export default function Home() {
               ))}
             </div>
           </div>
-        </section>
+        </motion.section>
 
         <SceneDivider tone="rose" />
-        <section id="skills" data-scene-id="skills" className="relative z-10 overflow-hidden py-10">
+        <motion.section
+          id="skills"
+          data-scene-id="skills"
+          className="scene-camera-stage scene-depth-skills relative z-10 overflow-hidden py-10"
+          style={skillsCameraStyle}
+        >
           <div className="cinema-marquee">
             <div className="cinema-marquee-track">
               {[...reelSkills, ...reelSkills].map((skill, idx) => <span key={`${skill}-${idx}`} className="cinema-chip">{skill}</span>)}
             </div>
           </div>
-        </section>
+        </motion.section>
 
-        <section id="projects" data-scene-id="projects" className="relative z-10 px-6 pb-24 pt-16 md:px-10 lg:px-16">
+        <motion.section
+          id="projects"
+          data-scene-id="projects"
+          className="scene-camera-stage scene-depth-projects relative z-10 px-6 pb-24 pt-16 md:px-10 lg:px-16"
+          style={projectsCameraStyle}
+        >
           <div className="mx-auto max-w-6xl">
             <div className="mb-12 flex items-end justify-between gap-6">
               <div>
@@ -513,69 +1464,29 @@ export default function Home() {
             </div>
 
             <div className="grid gap-7 md:grid-cols-2">
-              {projects.map((project, idx) => {
-                const Icon = project.icon;
-                const cardStyle = {
-                  "--project-aura-1": project.mood.aura[0],
-                  "--project-aura-2": project.mood.aura[1],
-                  "--project-sheen": project.mood.sheen,
-                  "--project-overlay-top": project.mood.overlay[0],
-                  "--project-overlay-bottom": project.mood.overlay[1],
-                  "--project-accent": project.mood.accent,
-                  "--project-icon": project.mood.icon,
-                  "--project-chip-bg": project.mood.chipBg,
-                  "--project-chip-border": project.mood.chipBorder,
-                  "--project-aura-speed": `${project.mood.auraSpeed}s`,
-                } as CSSProperties;
-                return (
-                  <motion.article
-                    key={project.title}
-                    className={`project-card project-tone-${project.mood.tone} group cinema-panel relative overflow-hidden rounded-3xl border border-white/15`}
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.25 }}
-                    transition={{ duration: 0.55, delay: idx * 0.06 }}
-                    whileHover={reducedMotion ? undefined : project.mood.hover}
-                    style={{ ...cardStyle, transformPerspective: 1100, transformStyle: "preserve-3d" }}
-                  >
-                    <div className="relative aspect-[16/10] overflow-hidden">
-                      <Image src={project.image} alt={`${project.title} preview`} fill className="object-cover transition duration-700 group-hover:scale-110" />
-                      <div className="project-card-overlay absolute inset-0" />
-                      <div className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-black/35">
-                        <Icon className="h-5 w-5" style={{ color: "var(--project-icon)" }} />
-                      </div>
-                    </div>
-                    <div className="space-y-4 p-5">
-                      <div className="flex items-start justify-between gap-3">
-                        <h3 className="font-cinema-display text-2xl text-[#fff5e6]">{project.title}</h3>
-                        <a
-                          href={project.link}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="project-card-visit inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/25 text-[#f8ead4] transition"
-                          aria-label={`Visit ${project.title}`}
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      </div>
-                      <p className="text-sm leading-relaxed text-[#f8eddc]/80">{project.description}</p>
-                      <div className="flex flex-wrap gap-2">
-                        {project.tags.map((tag) => (
-                          <span key={tag} className="project-chip rounded-full px-3 py-1 text-[0.68rem] uppercase tracking-[0.12em] text-[#f8eddc]/78">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.article>
-                );
-              })}
+              {projects.map((project, idx) => (
+                <ProjectReelCard
+                  key={project.title}
+                  project={project}
+                  idx={idx}
+                  immersiveMode={immersiveMode}
+                  reducedMotion={Boolean(reducedMotion)}
+                  isActive={activeProjectIndex === idx}
+                  onActivate={() => setActiveProjectIndex(idx)}
+                  onDeactivate={() => setActiveProjectIndex((current) => (current === idx ? null : current))}
+                />
+              ))}
             </div>
           </div>
-        </section>
+        </motion.section>
 
         <SceneDivider tone="cyan" />
-        <section id="contact" data-scene-id="contact" className="relative z-10 px-6 pb-24 md:px-10 lg:px-16">
+        <motion.section
+          id="contact"
+          data-scene-id="contact"
+          className="scene-camera-stage scene-depth-contact relative z-10 px-6 pb-24 md:px-10 lg:px-16"
+          style={contactCameraStyle}
+        >
           <motion.div
             className="mx-auto max-w-6xl rounded-[2rem] border border-white/15 bg-black/35 px-6 py-10 md:px-10 md:py-14"
             initial={{ opacity: 0, y: 30 }}
@@ -608,7 +1519,7 @@ export default function Home() {
               </a>
             </div>
           </motion.div>
-        </section>
+        </motion.section>
       </main>
     </>
   );
