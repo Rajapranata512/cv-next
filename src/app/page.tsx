@@ -54,6 +54,14 @@ type ProjectMood = {
   auraSpeed: number;
   hover: { y: number; rotateX: number; rotateY: number; scale: number };
 };
+type ProjectCueTheme = {
+  name: string;
+  motif: number[];
+  waveform: OscillatorType;
+  pan: [number, number];
+  glide: number;
+  q: number;
+};
 type Project = {
   title: string;
   description: string;
@@ -62,6 +70,7 @@ type Project = {
   tags: string[];
   icon: LucideIcon;
   mood: ProjectMood;
+  cue: ProjectCueTheme;
 };
 type SceneTone = "amber" | "rose" | "cyan";
 type SceneId = "intro" | "journey" | "skills" | "projects" | "contact";
@@ -109,6 +118,14 @@ const projects: Project[] = [
       auraSpeed: 7.2,
       hover: { y: -9, rotateX: 3.2, rotateY: -2.4, scale: 1.015 },
     },
+    cue: {
+      name: "Savor Rise",
+      motif: [196, 247, 294, 370],
+      waveform: "triangle",
+      pan: [-0.28, 0.06],
+      glide: 1.07,
+      q: 1.1,
+    },
   },
   {
     title: "Music & Mental Health",
@@ -128,6 +145,14 @@ const projects: Project[] = [
       chipBorder: "rgba(99, 102, 241, 0.34)",
       auraSpeed: 8.8,
       hover: { y: -10, rotateX: 3.4, rotateY: -3.1, scale: 1.016 },
+    },
+    cue: {
+      name: "Therapy Bloom",
+      motif: [220, 277, 330, 415],
+      waveform: "sine",
+      pan: [0.08, 0.34],
+      glide: 1.04,
+      q: 0.94,
     },
   },
   {
@@ -149,6 +174,14 @@ const projects: Project[] = [
       auraSpeed: 9.4,
       hover: { y: -8, rotateX: 2.4, rotateY: -2.2, scale: 1.013 },
     },
+    cue: {
+      name: "Boardroom Pulse",
+      motif: [174, 220, 293, 349],
+      waveform: "square",
+      pan: [-0.06, 0.18],
+      glide: 1.06,
+      q: 1.24,
+    },
   },
   {
     title: "Palorant",
@@ -168,6 +201,14 @@ const projects: Project[] = [
       chipBorder: "rgba(251, 113, 133, 0.34)",
       auraSpeed: 6.7,
       hover: { y: -11, rotateX: 4.2, rotateY: -3.4, scale: 1.018 },
+    },
+    cue: {
+      name: "Arcade Surge",
+      motif: [311, 392, 466, 587],
+      waveform: "sawtooth",
+      pan: [-0.22, 0.26],
+      glide: 1.09,
+      q: 1.34,
     },
   },
 ];
@@ -198,12 +239,6 @@ const sceneCueMap: Record<SceneId, { frequency: number; pan: number }> = {
   skills: { frequency: 277, pan: 0.08 },
   projects: { frequency: 329, pan: 0.24 },
   contact: { frequency: 392, pan: 0.36 },
-};
-const projectToneCueMap: Record<ProjectMood["tone"], { frequency: number; pan: number }> = {
-  gourmet: { frequency: 247, pan: -0.22 },
-  sonic: { frequency: 311, pan: 0.3 },
-  executive: { frequency: 293, pan: 0.12 },
-  arcade: { frequency: 349, pan: -0.12 },
 };
 
 function colorWithAlpha(color: string, alpha: number): string {
@@ -461,7 +496,7 @@ function ProjectDirectorCue({
             <p className="project-director-code">{project ? "PROJECT MOOD LIVE" : (sceneMeta?.code ?? "SCN-00")}</p>
             <p className="project-director-title">{project ? project.title : scenePalettes[scene].cue}</p>
             <p className="project-director-text">
-              {project ? "Tone sinkron ke atmosfer global dan layer reaktif." : (sceneMeta?.cue ?? "Story transition active.")}
+              {project ? `Motif cue: ${project.cue.name}. Tone sinkron ke atmosfer global.` : (sceneMeta?.cue ?? "Story transition active.")}
             </p>
           </div>
         </motion.div>
@@ -791,17 +826,23 @@ function ScrollReactiveLayer({
   quality,
   scene,
   projectMood,
+  projectCue,
+  projectCueKey,
+  projectTitle,
 }: {
   scrollYProgress: MotionValue<number>;
   quality: QualityLevel;
   scene: SceneId;
   projectMood: ProjectMood | null;
+  projectCue: ProjectCueTheme | null;
+  projectCueKey: string | null;
+  projectTitle: string | null;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scrollLevelRef = useRef(0);
   const audioEngineRef = useRef<AudioEngine | null>(null);
   const lastSceneCueRef = useRef<SceneId>(scene);
-  const lastProjectCueRef = useRef<ProjectMood["tone"] | null>(projectMood?.tone ?? null);
+  const lastProjectCueRef = useRef<string | null>(projectCueKey);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [audioPreset, setAudioPreset] = useState<AudioPreset>("epic");
   const [sectionCuesEnabled, setSectionCuesEnabled] = useState(true);
@@ -810,6 +851,7 @@ function ScrollReactiveLayer({
   const moodPrimary = projectMood?.icon ?? scenePalette.primary;
   const moodSecondary = projectMood?.accent ?? scenePalette.accent;
   const moodTertiary = projectMood?.tone === "arcade" ? "#fda4af" : (projectMood?.icon ?? scenePalette.secondary);
+  const activeMotifLabel = projectCue && projectTitle ? `${projectTitle} - ${projectCue.name}` : "Scene cue only";
 
   const getPresetConfig = useCallback((preset: AudioPreset) => {
     if (preset === "epic") {
@@ -991,11 +1033,76 @@ function ScrollReactiveLayer({
     [audioPreset],
   );
 
+  const playProjectMotif = useCallback(
+    (cue: ProjectCueTheme) => {
+      const engine = audioEngineRef.current;
+      if (!engine || !cue.motif.length) return;
+
+      const context = engine.context;
+      const now = context.currentTime + 0.015;
+      const isEpic = audioPreset === "epic";
+      const stepGap = isEpic ? 0.084 : 0.064;
+      const noteDuration = isEpic ? 0.22 : 0.17;
+      const peakGain = isEpic ? 0.037 : 0.024;
+      const [startPan, endPan] = cue.pan;
+
+      cue.motif.forEach((baseFrequency, index) => {
+        const noteTime = now + index * stepGap;
+        const progress = cue.motif.length <= 1 ? 0.5 : index / (cue.motif.length - 1);
+        const notePan = startPan + (endPan - startPan) * progress;
+
+        const osc = context.createOscillator();
+        const filter = context.createBiquadFilter();
+        const gain = context.createGain();
+        let panner: StereoPannerNode | null = null;
+
+        osc.type = cue.waveform;
+        const safeFrequency = Math.max(80, Math.min(1200, baseFrequency));
+        osc.frequency.setValueAtTime(safeFrequency, noteTime);
+        osc.frequency.exponentialRampToValueAtTime(safeFrequency * cue.glide, noteTime + noteDuration * 0.8);
+
+        filter.type = "bandpass";
+        filter.frequency.setValueAtTime(isEpic ? 1240 : 920, noteTime);
+        filter.Q.value = cue.q;
+
+        gain.gain.setValueAtTime(0.0001, noteTime);
+        gain.gain.exponentialRampToValueAtTime(peakGain, noteTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, noteTime + noteDuration);
+
+        try {
+          panner = context.createStereoPanner();
+          panner.pan.setValueAtTime(Math.max(-0.85, Math.min(0.85, notePan)), noteTime);
+        } catch {
+          panner = null;
+        }
+
+        osc.connect(filter);
+        filter.connect(gain);
+        if (panner) {
+          gain.connect(panner);
+          panner.connect(context.destination);
+        } else {
+          gain.connect(context.destination);
+        }
+
+        osc.start(noteTime);
+        osc.stop(noteTime + noteDuration + 0.04);
+        osc.onended = () => {
+          osc.disconnect();
+          filter.disconnect();
+          gain.disconnect();
+          if (panner) panner.disconnect();
+        };
+      });
+    },
+    [audioPreset],
+  );
+
   const handleToggleAudio = useCallback(async () => {
     if (audioEnabled) {
       setAudioEnabled(false);
       lastSceneCueRef.current = scene;
-      lastProjectCueRef.current = projectMood?.tone ?? null;
+      lastProjectCueRef.current = projectCueKey;
       await disposeAudio();
       return;
     }
@@ -1016,7 +1123,10 @@ function ScrollReactiveLayer({
       const cue = sceneCueMap[scene];
       playInteractionCue(cue.frequency, cue.pan, "scene");
       lastSceneCueRef.current = scene;
-      lastProjectCueRef.current = projectMood?.tone ?? null;
+      if (projectCue && projectCueKey) {
+        playProjectMotif(projectCue);
+      }
+      lastProjectCueRef.current = projectCueKey;
     }
     setAudioEnabled(true);
   }, [
@@ -1026,7 +1136,9 @@ function ScrollReactiveLayer({
     disposeAudio,
     getPresetConfig,
     playInteractionCue,
-    projectMood?.tone,
+    playProjectMotif,
+    projectCue,
+    projectCueKey,
     scene,
     sectionCuesEnabled,
   ]);
@@ -1071,10 +1183,9 @@ function ScrollReactiveLayer({
   }, [audioEnabled, audioPreset, getPresetConfig]);
 
   useEffect(() => {
-    const activeTone = projectMood?.tone ?? null;
     if (!audioEnabled || !sectionCuesEnabled) {
       lastSceneCueRef.current = scene;
-      lastProjectCueRef.current = activeTone;
+      lastProjectCueRef.current = projectCueKey;
       return;
     }
 
@@ -1083,21 +1194,20 @@ function ScrollReactiveLayer({
       playInteractionCue(cue.frequency, cue.pan, "scene");
       lastSceneCueRef.current = scene;
     }
-  }, [audioEnabled, playInteractionCue, projectMood?.tone, scene, sectionCuesEnabled]);
+  }, [audioEnabled, playInteractionCue, projectCueKey, scene, sectionCuesEnabled]);
 
   useEffect(() => {
-    const activeTone = projectMood?.tone ?? null;
+    const activeCueKey = projectCueKey;
     if (!audioEnabled || !sectionCuesEnabled) {
-      lastProjectCueRef.current = activeTone;
+      lastProjectCueRef.current = activeCueKey;
       return;
     }
 
-    if (activeTone && lastProjectCueRef.current !== activeTone) {
-      const cue = projectToneCueMap[activeTone];
-      playInteractionCue(cue.frequency, cue.pan, "project");
+    if (projectCue && activeCueKey && lastProjectCueRef.current !== activeCueKey) {
+      playProjectMotif(projectCue);
     }
-    lastProjectCueRef.current = activeTone;
-  }, [audioEnabled, playInteractionCue, projectMood?.tone, sectionCuesEnabled]);
+    lastProjectCueRef.current = activeCueKey;
+  }, [audioEnabled, playProjectMotif, projectCue, projectCueKey, sectionCuesEnabled]);
 
   useEffect(() => {
     return () => {
@@ -1256,6 +1366,9 @@ function ScrollReactiveLayer({
         <p className="mt-1 text-[0.55rem] uppercase tracking-[0.14em] text-[#f8eddc]/58">
           Cues react on scene transition + project focus
         </p>
+        <p className="mt-1 text-[0.53rem] uppercase tracking-[0.12em] text-[#f8eddc]/52">
+          Active Motif: {activeMotifLabel}
+        </p>
         <p className="mt-2 text-[0.6rem] uppercase tracking-[0.14em] text-[#f8eddc]/62">No autoplay. Manual trigger only.</p>
       </div>
     </>
@@ -1406,6 +1519,9 @@ export default function Home() {
             quality={quality}
             scene={activeScene}
             projectMood={activeProject?.mood ?? null}
+            projectCue={activeProject?.cue ?? null}
+            projectCueKey={activeProject?.title ?? null}
+            projectTitle={activeProject?.title ?? null}
           />
         )}
         <ProjectDirectorCue scene={activeScene} project={activeProject} enabled={immersiveMode} />
