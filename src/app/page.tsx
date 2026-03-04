@@ -192,6 +192,19 @@ const scenePalettes: Record<SceneId, ScenePalette> = {
   projects: { primary: "#fb7185", secondary: "#38bdf8", accent: "#f472b6", cue: "Showcase Sequence" },
   contact: { primary: "#22d3ee", secondary: "#fbbf24", accent: "#38bdf8", cue: "Closing Credits" },
 };
+const sceneCueMap: Record<SceneId, { frequency: number; pan: number }> = {
+  intro: { frequency: 196, pan: -0.38 },
+  journey: { frequency: 233, pan: -0.18 },
+  skills: { frequency: 277, pan: 0.08 },
+  projects: { frequency: 329, pan: 0.24 },
+  contact: { frequency: 392, pan: 0.36 },
+};
+const projectToneCueMap: Record<ProjectMood["tone"], { frequency: number; pan: number }> = {
+  gourmet: { frequency: 247, pan: -0.22 },
+  sonic: { frequency: 311, pan: 0.3 },
+  executive: { frequency: 293, pan: 0.12 },
+  arcade: { frequency: 349, pan: -0.12 },
+};
 
 function colorWithAlpha(color: string, alpha: number): string {
   const safeAlpha = Math.min(1, Math.max(0, alpha));
@@ -787,8 +800,11 @@ function ScrollReactiveLayer({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scrollLevelRef = useRef(0);
   const audioEngineRef = useRef<AudioEngine | null>(null);
+  const lastSceneCueRef = useRef<SceneId>(scene);
+  const lastProjectCueRef = useRef<ProjectMood["tone"] | null>(projectMood?.tone ?? null);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [audioPreset, setAudioPreset] = useState<AudioPreset>("epic");
+  const [sectionCuesEnabled, setSectionCuesEnabled] = useState(true);
   const reducedMotion = useReducedMotion();
   const scenePalette = scenePalettes[scene];
   const moodPrimary = projectMood?.icon ?? scenePalette.primary;
@@ -907,9 +923,79 @@ function ScrollReactiveLayer({
     audioEngineRef.current = null;
   }, []);
 
+  const playInteractionCue = useCallback(
+    (frequency: number, pan: number, cueType: "scene" | "project") => {
+      const engine = audioEngineRef.current;
+      if (!engine) return;
+
+      const context = engine.context;
+      const now = context.currentTime + 0.01;
+      const isEpic = audioPreset === "epic";
+      const duration = cueType === "scene" ? (isEpic ? 0.52 : 0.38) : (isEpic ? 0.34 : 0.24);
+      const peakGain = cueType === "scene" ? (isEpic ? 0.05 : 0.03) : (isEpic ? 0.034 : 0.02);
+
+      const oscA = context.createOscillator();
+      const oscB = context.createOscillator();
+      const filter = context.createBiquadFilter();
+      const cueGain = context.createGain();
+      let panner: StereoPannerNode | null = null;
+
+      oscA.type = isEpic ? "triangle" : "sine";
+      oscB.type = isEpic ? "sawtooth" : "triangle";
+      oscA.frequency.setValueAtTime(frequency, now);
+      oscB.frequency.setValueAtTime(frequency * (cueType === "scene" ? 1.5 : 1.35), now);
+      oscA.frequency.exponentialRampToValueAtTime(frequency * (cueType === "scene" ? 1.22 : 1.12), now + duration * 0.76);
+      oscB.frequency.exponentialRampToValueAtTime(frequency * (cueType === "scene" ? 2.02 : 1.82), now + duration * 0.72);
+
+      filter.type = isEpic ? "bandpass" : "lowpass";
+      filter.frequency.setValueAtTime(isEpic ? 1380 : 940, now);
+      filter.Q.value = isEpic ? 1.35 : 0.82;
+
+      cueGain.gain.setValueAtTime(0.0001, now);
+      cueGain.gain.exponentialRampToValueAtTime(peakGain, now + 0.018);
+      cueGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      try {
+        panner = context.createStereoPanner();
+        panner.pan.setValueAtTime(Math.max(-0.85, Math.min(0.85, pan)), now);
+      } catch {
+        panner = null;
+      }
+
+      oscA.connect(filter);
+      oscB.connect(filter);
+      filter.connect(cueGain);
+      if (panner) {
+        cueGain.connect(panner);
+        panner.connect(context.destination);
+      } else {
+        cueGain.connect(context.destination);
+      }
+
+      oscA.start(now);
+      oscB.start(now + (cueType === "scene" ? 0.014 : 0));
+
+      const stopAt = now + duration + 0.06;
+      oscA.stop(stopAt);
+      oscB.stop(stopAt);
+
+      const cleanup = () => {
+        oscA.disconnect();
+        oscB.disconnect();
+        filter.disconnect();
+        cueGain.disconnect();
+        if (panner) panner.disconnect();
+      };
+      oscB.onended = cleanup;
+    },
+    [audioPreset],
+  );
+
   const handleToggleAudio = useCallback(async () => {
     if (audioEnabled) {
       setAudioEnabled(false);
+      lastSceneCueRef.current = scene;
+      lastProjectCueRef.current = projectMood?.tone ?? null;
       await disposeAudio();
       return;
     }
@@ -926,8 +1012,24 @@ function ScrollReactiveLayer({
     const cfg = getPresetConfig(audioPreset);
     engine.gain.gain.cancelScheduledValues(now);
     engine.gain.gain.linearRampToValueAtTime(cfg.gainOn, now + 0.38);
+    if (sectionCuesEnabled) {
+      const cue = sceneCueMap[scene];
+      playInteractionCue(cue.frequency, cue.pan, "scene");
+      lastSceneCueRef.current = scene;
+      lastProjectCueRef.current = projectMood?.tone ?? null;
+    }
     setAudioEnabled(true);
-  }, [audioEnabled, audioPreset, createAudioEngine, disposeAudio, getPresetConfig]);
+  }, [
+    audioEnabled,
+    audioPreset,
+    createAudioEngine,
+    disposeAudio,
+    getPresetConfig,
+    playInteractionCue,
+    projectMood?.tone,
+    scene,
+    sectionCuesEnabled,
+  ]);
 
   useEffect(() => {
     const engine = audioEngineRef.current;
@@ -967,6 +1069,35 @@ function ScrollReactiveLayer({
     raf = requestAnimationFrame(modulate);
     return () => cancelAnimationFrame(raf);
   }, [audioEnabled, audioPreset, getPresetConfig]);
+
+  useEffect(() => {
+    const activeTone = projectMood?.tone ?? null;
+    if (!audioEnabled || !sectionCuesEnabled) {
+      lastSceneCueRef.current = scene;
+      lastProjectCueRef.current = activeTone;
+      return;
+    }
+
+    if (lastSceneCueRef.current !== scene) {
+      const cue = sceneCueMap[scene];
+      playInteractionCue(cue.frequency, cue.pan, "scene");
+      lastSceneCueRef.current = scene;
+    }
+  }, [audioEnabled, playInteractionCue, projectMood?.tone, scene, sectionCuesEnabled]);
+
+  useEffect(() => {
+    const activeTone = projectMood?.tone ?? null;
+    if (!audioEnabled || !sectionCuesEnabled) {
+      lastProjectCueRef.current = activeTone;
+      return;
+    }
+
+    if (activeTone && lastProjectCueRef.current !== activeTone) {
+      const cue = projectToneCueMap[activeTone];
+      playInteractionCue(cue.frequency, cue.pan, "project");
+    }
+    lastProjectCueRef.current = activeTone;
+  }, [audioEnabled, playInteractionCue, projectMood?.tone, sectionCuesEnabled]);
 
   useEffect(() => {
     return () => {
@@ -1105,8 +1236,25 @@ function ScrollReactiveLayer({
             );
           })}
         </div>
+        <button
+          type="button"
+          onClick={() => setSectionCuesEnabled((value) => !value)}
+          className={[
+            "audio-cue-toggle mt-2 inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[0.56rem] font-semibold uppercase tracking-[0.15em] transition",
+            sectionCuesEnabled
+              ? "border-emerald-200/40 bg-emerald-300/10 text-emerald-100"
+              : "border-white/25 bg-white/5 text-[#f8eddc]/65 hover:bg-white/10",
+          ].join(" ")}
+          aria-pressed={sectionCuesEnabled}
+        >
+          <Film className="h-3.5 w-3.5" />
+          {sectionCuesEnabled ? "Section Cues ON" : "Section Cues OFF"}
+        </button>
         <p className="mt-1 text-[0.58rem] uppercase tracking-[0.14em] text-[#f8eddc]/60">
-          Pulse Preset: {audioPreset === "epic" ? "Epic" : "Soft"}
+          Audio Preset: {audioPreset === "epic" ? "Epic" : "Soft"}
+        </p>
+        <p className="mt-1 text-[0.55rem] uppercase tracking-[0.14em] text-[#f8eddc]/58">
+          Cues react on scene transition + project focus
         </p>
         <p className="mt-2 text-[0.6rem] uppercase tracking-[0.14em] text-[#f8eddc]/62">No autoplay. Manual trigger only.</p>
       </div>
@@ -1122,6 +1270,8 @@ export default function Home() {
   const scaleX = useSpring(scrollYProgress, { stiffness: 90, damping: 22, restDelta: 0.001 });
   const heroY = useTransform(scrollYProgress, [0, 0.25], [0, -140]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.28], [1, 0.38]);
+  const heroScale = useSpring(useTransform(scrollYProgress, [0, 0.24], [1, 0.966]), { stiffness: 100, damping: 24, mass: 0.48 });
+  const heroTilt = useSpring(useTransform(scrollYProgress, [0, 0.22], [0, -2.4]), { stiffness: 98, damping: 22, mass: 0.45 });
   const cameraSpring = { stiffness: 92, damping: 24, mass: 0.54, restDelta: 0.001 };
   const introCamY = useSpring(useTransform(scrollYProgress, [0, 0.2, 0.35], [0, -62, -128]), cameraSpring);
   const introCamScale = useSpring(useTransform(scrollYProgress, [0, 0.34], [1, 0.975]), cameraSpring);
@@ -1163,6 +1313,9 @@ export default function Home() {
     "--scene-accent-soft": colorWithAlpha(accentColor, 0.24),
     "--scene-secondary": secondaryColor,
   } as CSSProperties;
+  const heroShellStyle = immersiveMode && !reducedMotion
+    ? { y: heroY, opacity: heroOpacity, scale: heroScale, rotateX: heroTilt }
+    : { y: heroY, opacity: heroOpacity };
   const introCameraStyle = cameraEnabled ? { y: introCamY, scale: introCamScale, rotateX: introCamTilt } : undefined;
   const journeyCameraStyle = cameraEnabled ? { y: journeyCamY, scale: journeyCamScale, rotateX: journeyCamTilt } : undefined;
   const skillsCameraStyle = cameraEnabled ? { y: skillsCamY, scale: skillsCamScale, rotateX: skillsCamTilt } : undefined;
@@ -1329,7 +1482,19 @@ export default function Home() {
             />
           )}
 
-          <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative z-10 mx-auto max-w-6xl">
+          {immersiveMode && (
+            <div className="studio-firstfold-overlay pointer-events-none absolute inset-x-4 top-[8rem] z-[6] hidden h-[calc(100%-8.5rem)] rounded-[2rem] lg:block">
+              <div className="studio-firstfold-frame absolute inset-0 rounded-[2rem]" aria-hidden />
+              <div className="studio-firstfold-sweep absolute inset-0 rounded-[2rem]" aria-hidden />
+            </div>
+          )}
+
+          <motion.div style={heroShellStyle} className="studio-hero-shell relative z-10 mx-auto max-w-6xl">
+            <div className="studio-intro-meta mb-4 flex flex-wrap items-center gap-2 text-[0.58rem] uppercase tracking-[0.2em] text-[#f8eddc]/70">
+              <span className="studio-meta-chip">Studio Intro Sequence</span>
+              <span className="studio-meta-dot" aria-hidden />
+              <span className="studio-meta-chip">High-End Cinematic Build</span>
+            </div>
             <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-200/30 bg-amber-300/10 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-amber-200">
               <Sparkles className="h-3.5 w-3.5" />
               Cinematic Portfolio Experience
@@ -1356,6 +1521,11 @@ export default function Home() {
                     Open CV
                   </a>
                 </div>
+                <div className="studio-intro-strip mt-6 flex flex-wrap gap-2">
+                  <span className="studio-intro-pill">Scene-driven storytelling</span>
+                  <span className="studio-intro-pill">Interaction-first motion</span>
+                  <span className="studio-intro-pill">Manual cinematic audio cues</span>
+                </div>
               </div>
               <motion.div
                 className="cinema-panel relative overflow-hidden rounded-3xl border border-white/15 p-5"
@@ -1366,6 +1536,11 @@ export default function Home() {
               >
                 <div className="relative aspect-[4/5] overflow-hidden rounded-2xl">
                   <Image src="/avatar.jpg" alt="Raja Adi Pranata portrait" fill className="object-cover" priority />
+                  {immersiveMode && <div className="studio-portrait-ring absolute inset-0 rounded-2xl" aria-hidden />}
+                  {immersiveMode && <div className="studio-portrait-scan absolute inset-0 rounded-2xl" aria-hidden />}
+                  <div className="studio-portrait-badge absolute right-3 top-3 rounded-full border border-white/25 bg-black/38 px-3 py-1 text-[0.56rem] uppercase tracking-[0.16em] text-[#fff1d3]">
+                    Studio Capture
+                  </div>
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_35%,rgba(0,0,0,.78)_100%)]" />
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-3 text-center">
