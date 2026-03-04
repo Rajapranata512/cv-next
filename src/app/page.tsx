@@ -42,6 +42,7 @@ const Scene3D = dynamic(() => import("@/components/ui/Scene3D").then((m) => m.Sc
 
 type Chapter = { year: string; title: string; text: string };
 type AudioPreset = "soft" | "epic";
+type LiveIntensityMode = "calm" | "drive" | "peak";
 type ProjectMood = {
   tone: "gourmet" | "sonic" | "executive" | "arcade";
   aura: [string, string];
@@ -840,18 +841,26 @@ function ScrollReactiveLayer({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const scrollLevelRef = useRef(0);
+  const scrollVelocityRef = useRef(0);
+  const intensityRef = useRef(0);
+  const lastSampleRef = useRef<{ t: number; y: number }>({ t: 0, y: 0 });
+  const modeGateRef = useRef(0);
   const audioEngineRef = useRef<AudioEngine | null>(null);
   const lastSceneCueRef = useRef<SceneId>(scene);
   const lastProjectCueRef = useRef<string | null>(projectCueKey);
   const [audioEnabled, setAudioEnabled] = useState(false);
   const [audioPreset, setAudioPreset] = useState<AudioPreset>("epic");
   const [sectionCuesEnabled, setSectionCuesEnabled] = useState(true);
+  const [liveMode, setLiveMode] = useState<LiveIntensityMode>("calm");
+  const [liveVelocity, setLiveVelocity] = useState(0);
   const reducedMotion = useReducedMotion();
   const scenePalette = scenePalettes[scene];
   const moodPrimary = projectMood?.icon ?? scenePalette.primary;
   const moodSecondary = projectMood?.accent ?? scenePalette.accent;
   const moodTertiary = projectMood?.tone === "arcade" ? "#fda4af" : (projectMood?.icon ?? scenePalette.secondary);
   const activeMotifLabel = projectCue && projectTitle ? `${projectTitle} - ${projectCue.name}` : "Scene cue only";
+  const visibleLiveMode: LiveIntensityMode = reducedMotion ? "calm" : liveMode;
+  const visibleLiveVelocity = reducedMotion ? 0 : liveVelocity;
 
   const getPresetConfig = useCallback((preset: AudioPreset) => {
     if (preset === "epic") {
@@ -897,6 +906,30 @@ function ScrollReactiveLayer({
 
   useMotionValueEvent(scrollYProgress, "change", (latest) => {
     scrollLevelRef.current = latest;
+    const now = performance.now();
+    const previous = lastSampleRef.current;
+    if (previous.t === 0) {
+      lastSampleRef.current = { t: now, y: latest };
+      return;
+    }
+
+    const deltaTime = Math.max(16, now - previous.t);
+    const progressPerSecond = Math.abs(latest - previous.y) / (deltaTime / 1000);
+    const smoothedVelocity = scrollVelocityRef.current * 0.72 + progressPerSecond * 0.28;
+    const intensity = reducedMotion ? 0 : Math.min(1, smoothedVelocity / 1.85);
+
+    scrollVelocityRef.current = smoothedVelocity;
+    intensityRef.current = intensity;
+
+    if (now - modeGateRef.current > 120) {
+      const nextMode: LiveIntensityMode = intensity > 0.67 ? "peak" : intensity > 0.3 ? "drive" : "calm";
+      const visibleVelocity = Math.min(3.99, smoothedVelocity);
+      setLiveMode((current) => (current === nextMode ? current : nextMode));
+      setLiveVelocity((current) => (Math.abs(current - visibleVelocity) < 0.03 ? current : visibleVelocity));
+      modeGateRef.current = now;
+    }
+
+    lastSampleRef.current = { t: now, y: latest };
   });
 
   const createAudioEngine = useCallback((): AudioEngine | null => {
@@ -973,8 +1006,12 @@ function ScrollReactiveLayer({
       const context = engine.context;
       const now = context.currentTime + 0.01;
       const isEpic = audioPreset === "epic";
-      const duration = cueType === "scene" ? (isEpic ? 0.52 : 0.38) : (isEpic ? 0.34 : 0.24);
-      const peakGain = cueType === "scene" ? (isEpic ? 0.05 : 0.03) : (isEpic ? 0.034 : 0.02);
+      const intensity = intensityRef.current;
+      const durationBase = cueType === "scene" ? (isEpic ? 0.52 : 0.38) : (isEpic ? 0.34 : 0.24);
+      const duration = Math.max(0.12, durationBase * (1 - intensity * 0.24));
+      const peakBase = cueType === "scene" ? (isEpic ? 0.05 : 0.03) : (isEpic ? 0.034 : 0.02);
+      const peakGain = Math.min(0.09, peakBase * (1 + intensity * 0.68));
+      const pitchLift = 1 + intensity * (cueType === "scene" ? 0.08 : 0.11);
 
       const oscA = context.createOscillator();
       const oscB = context.createOscillator();
@@ -984,14 +1021,14 @@ function ScrollReactiveLayer({
 
       oscA.type = isEpic ? "triangle" : "sine";
       oscB.type = isEpic ? "sawtooth" : "triangle";
-      oscA.frequency.setValueAtTime(frequency, now);
-      oscB.frequency.setValueAtTime(frequency * (cueType === "scene" ? 1.5 : 1.35), now);
-      oscA.frequency.exponentialRampToValueAtTime(frequency * (cueType === "scene" ? 1.22 : 1.12), now + duration * 0.76);
-      oscB.frequency.exponentialRampToValueAtTime(frequency * (cueType === "scene" ? 2.02 : 1.82), now + duration * 0.72);
+      oscA.frequency.setValueAtTime(frequency * pitchLift, now);
+      oscB.frequency.setValueAtTime(frequency * (cueType === "scene" ? 1.5 : 1.35) * pitchLift, now);
+      oscA.frequency.exponentialRampToValueAtTime(frequency * (cueType === "scene" ? 1.22 : 1.12) * pitchLift, now + duration * 0.76);
+      oscB.frequency.exponentialRampToValueAtTime(frequency * (cueType === "scene" ? 2.02 : 1.82) * pitchLift, now + duration * 0.72);
 
       filter.type = isEpic ? "bandpass" : "lowpass";
-      filter.frequency.setValueAtTime(isEpic ? 1380 : 940, now);
-      filter.Q.value = isEpic ? 1.35 : 0.82;
+      filter.frequency.setValueAtTime((isEpic ? 1380 : 940) + intensity * 280, now);
+      filter.Q.value = (isEpic ? 1.35 : 0.82) + intensity * 0.35;
 
       cueGain.gain.setValueAtTime(0.0001, now);
       cueGain.gain.exponentialRampToValueAtTime(peakGain, now + 0.018);
@@ -1041,10 +1078,12 @@ function ScrollReactiveLayer({
       const context = engine.context;
       const now = context.currentTime + 0.015;
       const isEpic = audioPreset === "epic";
-      const stepGap = isEpic ? 0.084 : 0.064;
-      const noteDuration = isEpic ? 0.22 : 0.17;
-      const peakGain = isEpic ? 0.037 : 0.024;
+      const intensity = intensityRef.current;
+      const stepGap = Math.max(0.035, (isEpic ? 0.084 : 0.064) * (1 - intensity * 0.26));
+      const noteDuration = Math.max(0.08, (isEpic ? 0.22 : 0.17) * (1 - intensity * 0.22));
+      const peakGain = Math.min(0.08, (isEpic ? 0.037 : 0.024) * (1 + intensity * 0.75));
       const [startPan, endPan] = cue.pan;
+      const motifLift = 1 + intensity * 0.12;
 
       cue.motif.forEach((baseFrequency, index) => {
         const noteTime = now + index * stepGap;
@@ -1054,16 +1093,22 @@ function ScrollReactiveLayer({
         const osc = context.createOscillator();
         const filter = context.createBiquadFilter();
         const gain = context.createGain();
+        const shimmerOsc = intensity > 0.62 && index % 2 === 1 ? context.createOscillator() : null;
+        const shimmerGain = shimmerOsc ? context.createGain() : null;
         let panner: StereoPannerNode | null = null;
 
         osc.type = cue.waveform;
         const safeFrequency = Math.max(80, Math.min(1200, baseFrequency));
-        osc.frequency.setValueAtTime(safeFrequency, noteTime);
-        osc.frequency.exponentialRampToValueAtTime(safeFrequency * cue.glide, noteTime + noteDuration * 0.8);
+        const shapedFrequency = safeFrequency * motifLift * (1 + progress * intensity * 0.05);
+        osc.frequency.setValueAtTime(shapedFrequency, noteTime);
+        osc.frequency.exponentialRampToValueAtTime(
+          shapedFrequency * cue.glide * (1 + intensity * 0.05),
+          noteTime + noteDuration * 0.8,
+        );
 
         filter.type = "bandpass";
-        filter.frequency.setValueAtTime(isEpic ? 1240 : 920, noteTime);
-        filter.Q.value = cue.q;
+        filter.frequency.setValueAtTime((isEpic ? 1240 : 920) + intensity * 300 + progress * 120, noteTime);
+        filter.Q.value = cue.q + intensity * 0.32;
 
         gain.gain.setValueAtTime(0.0001, noteTime);
         gain.gain.exponentialRampToValueAtTime(peakGain, noteTime + 0.02);
@@ -1077,6 +1122,15 @@ function ScrollReactiveLayer({
         }
 
         osc.connect(filter);
+        if (shimmerOsc && shimmerGain) {
+          shimmerOsc.type = "sine";
+          shimmerOsc.frequency.setValueAtTime(Math.min(1500, shapedFrequency * 2), noteTime);
+          shimmerOsc.frequency.exponentialRampToValueAtTime(Math.min(1800, shapedFrequency * 2.12), noteTime + noteDuration * 0.8);
+          shimmerGain.gain.setValueAtTime(0.09 + intensity * 0.07, noteTime);
+          shimmerGain.gain.exponentialRampToValueAtTime(0.0001, noteTime + noteDuration);
+          shimmerOsc.connect(shimmerGain);
+          shimmerGain.connect(filter);
+        }
         filter.connect(gain);
         if (panner) {
           gain.connect(panner);
@@ -1086,9 +1140,13 @@ function ScrollReactiveLayer({
         }
 
         osc.start(noteTime);
+        if (shimmerOsc) shimmerOsc.start(noteTime + 0.01);
         osc.stop(noteTime + noteDuration + 0.04);
+        if (shimmerOsc) shimmerOsc.stop(noteTime + noteDuration + 0.045);
         osc.onended = () => {
           osc.disconnect();
+          if (shimmerOsc) shimmerOsc.disconnect();
+          if (shimmerGain) shimmerGain.disconnect();
           filter.disconnect();
           gain.disconnect();
           if (panner) panner.disconnect();
@@ -1153,8 +1211,11 @@ function ScrollReactiveLayer({
     engine.oscB.type = cfg.oscBType;
     engine.filter.Q.value = cfg.q;
     engine.analyser.smoothingTimeConstant = cfg.smooth;
-    engine.filter.frequency.setTargetAtTime(cfg.filterBase + scrollLevelRef.current * cfg.filterRange, now, 0.16);
-    engine.gain.gain.setTargetAtTime(audioEnabled ? cfg.gainBase + scrollLevelRef.current * cfg.gainRange : 0.00001, now, 0.2);
+    const kinetic = intensityRef.current;
+    const filterTarget = cfg.filterBase + scrollLevelRef.current * cfg.filterRange + kinetic * (audioPreset === "epic" ? 860 : 540);
+    const gainTarget = cfg.gainBase + scrollLevelRef.current * cfg.gainRange + kinetic * (audioPreset === "epic" ? 0.0044 : 0.0032);
+    engine.filter.frequency.setTargetAtTime(filterTarget, now, 0.16);
+    engine.gain.gain.setTargetAtTime(audioEnabled ? gainTarget : 0.00001, now, 0.2);
   }, [audioEnabled, audioPreset, getPresetConfig]);
 
   useEffect(() => {
@@ -1166,13 +1227,16 @@ function ScrollReactiveLayer({
       const engine = audioEngineRef.current;
       if (engine) {
         const level = scrollLevelRef.current;
+        const kinetic = intensityRef.current;
         const now = engine.context.currentTime;
-        const base = cfg.oscABase + level * cfg.oscARange;
+        const base = (cfg.oscABase + level * cfg.oscARange) * (1 + kinetic * 0.12);
+        const filterTarget = cfg.filterBase + level * cfg.filterRange + kinetic * (audioPreset === "epic" ? 860 : 540);
+        const gainTarget = cfg.gainBase + level * cfg.gainRange + kinetic * (audioPreset === "epic" ? 0.0044 : 0.0032);
 
         engine.oscA.frequency.setTargetAtTime(base, now, 0.12);
-        engine.oscB.frequency.setTargetAtTime(base * cfg.harmonic, now, 0.12);
-        engine.filter.frequency.setTargetAtTime(cfg.filterBase + level * cfg.filterRange, now, 0.18);
-        engine.gain.gain.setTargetAtTime(cfg.gainBase + level * cfg.gainRange, now, 0.2);
+        engine.oscB.frequency.setTargetAtTime(base * cfg.harmonic * (1 + kinetic * 0.05), now, 0.12);
+        engine.filter.frequency.setTargetAtTime(filterTarget, now, 0.18);
+        engine.gain.gain.setTargetAtTime(gainTarget, now, 0.2);
       }
 
       raf = requestAnimationFrame(modulate);
@@ -1239,6 +1303,7 @@ function ScrollReactiveLayer({
       const width = canvas.clientWidth || window.innerWidth;
       const height = canvas.clientHeight || Math.round(window.innerHeight * 0.28);
       const level = scrollLevelRef.current;
+      const kinetic = intensityRef.current;
       const time = performance.now() * 0.0014;
       const horizon = Math.min(220, height * 0.9);
       const midY = horizon * 0.56;
@@ -1246,8 +1311,8 @@ function ScrollReactiveLayer({
       ctx.clearRect(0, 0, width, height);
 
       const wash = ctx.createLinearGradient(0, 0, 0, horizon);
-      wash.addColorStop(0, colorWithAlpha(moodSecondary, 0.08 + level * (audioPreset === "epic" ? 0.22 : 0.16)));
-      wash.addColorStop(0.56, colorWithAlpha(moodPrimary, 0.06 + level * 0.11));
+      wash.addColorStop(0, colorWithAlpha(moodSecondary, 0.08 + level * (audioPreset === "epic" ? 0.22 : 0.16) + kinetic * 0.11));
+      wash.addColorStop(0.56, colorWithAlpha(moodPrimary, 0.06 + level * 0.11 + kinetic * 0.08));
       wash.addColorStop(1, "rgba(12, 18, 28, 0)");
       ctx.fillStyle = wash;
       ctx.fillRect(0, 0, width, horizon);
@@ -1263,9 +1328,10 @@ function ScrollReactiveLayer({
       for (let index = 0; index < barCount; index += 1) {
         const freqIndex = freqData ? Math.floor((index / barCount) * freqData.length) : 0;
         const freqValue = freqData ? freqData[freqIndex] / 255 : 0;
-        const synthetic = (Math.sin(time * 2.8 + index * 0.36 + level * 8.5) + 1) / 2;
-        const amplitude = Math.max(freqValue, synthetic * (reducedMotion ? 0.35 : cfg.synthBlend));
-        const barHeight = 7 + amplitude * (24 + level * (reducedMotion ? 42 : 110 * cfg.barBoost));
+        const synthetic = (Math.sin(time * (2.8 + kinetic * 0.9) + index * 0.36 + level * 8.5 + kinetic * 11.2) + 1) / 2;
+        const blend = reducedMotion ? 0.35 : cfg.synthBlend + kinetic * 0.22;
+        const amplitude = Math.max(freqValue, synthetic * blend);
+        const barHeight = 7 + amplitude * (24 + level * (reducedMotion ? 42 : 110 * cfg.barBoost) + kinetic * 86);
 
         const x = index * step + (step - barWidth) * 0.5;
         const y = midY - barHeight * 0.5;
@@ -1284,16 +1350,21 @@ function ScrollReactiveLayer({
         const ratio = x / width;
         const freqIndex = freqData ? Math.floor(ratio * (freqData.length - 1)) : 0;
         const freqValue = freqData ? freqData[freqIndex] / 255 : 0;
-        const synthetic = (Math.sin(time * 3.1 + x * 0.023 + level * 7) + 1) / 2;
-        const amplitude = Math.max(freqValue, synthetic * cfg.synthBlend);
-        const waveY = midY + Math.sin(x * 0.02 + time * 4.6) * (4 + amplitude * (15 + level * 32 * cfg.waveBoost));
+        const synthetic = (Math.sin(time * (3.1 + kinetic * 0.8) + x * 0.023 + level * 7 + kinetic * 9.4) + 1) / 2;
+        const amplitude = Math.max(freqValue, synthetic * (cfg.synthBlend + kinetic * 0.2));
+        const waveY = midY + Math.sin(x * 0.02 + time * (4.6 + kinetic * 1.2)) * (4 + amplitude * (15 + level * 32 * cfg.waveBoost + kinetic * 18));
 
         if (x === 0) ctx.moveTo(x, waveY);
         else ctx.lineTo(x, waveY);
       }
-      ctx.shadowBlur = reducedMotion ? 0 : 14 + level * 20;
-      ctx.shadowColor = colorWithAlpha(moodPrimary, 0.62);
-      ctx.strokeStyle = colorWithAlpha(moodSecondary, audioPreset === "epic" ? 0.24 + level * 0.43 : 0.17 + level * 0.36);
+      ctx.shadowBlur = reducedMotion ? 0 : 14 + level * 20 + kinetic * 22;
+      ctx.shadowColor = colorWithAlpha(moodPrimary, 0.62 + kinetic * 0.2);
+      ctx.strokeStyle = colorWithAlpha(
+        moodSecondary,
+        audioPreset === "epic"
+          ? 0.24 + level * 0.43 + kinetic * 0.2
+          : 0.17 + level * 0.36 + kinetic * 0.16,
+      );
       ctx.lineWidth = 1.5;
       ctx.stroke();
       ctx.shadowBlur = 0;
@@ -1368,6 +1439,18 @@ function ScrollReactiveLayer({
         </p>
         <p className="mt-1 text-[0.53rem] uppercase tracking-[0.12em] text-[#f8eddc]/52">
           Active Motif: {activeMotifLabel}
+        </p>
+        <p
+          className={[
+            "mt-1 text-[0.53rem] uppercase tracking-[0.12em]",
+            visibleLiveMode === "peak"
+              ? "text-rose-200/86"
+              : visibleLiveMode === "drive"
+                ? "text-amber-100/82"
+                : "text-[#f8eddc]/55",
+          ].join(" ")}
+        >
+          Live Performance: {visibleLiveMode} ({visibleLiveVelocity.toFixed(2)}x speed)
         </p>
         <p className="mt-2 text-[0.6rem] uppercase tracking-[0.14em] text-[#f8eddc]/62">No autoplay. Manual trigger only.</p>
       </div>
