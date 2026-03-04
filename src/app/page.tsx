@@ -1,12 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
-import dynamic from "next/dynamic";
 import Image from "next/image";
 import {
   AnimatePresence,
   motion,
-  useMotionValueEvent,
   useReducedMotion,
   useScroll,
   useSpring,
@@ -23,16 +21,11 @@ import {
   Mail,
   SkipForward,
   Sparkles,
-  Volume2,
-  VolumeX,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAdaptiveQuality, type QualityLevel } from "@/components/ui/AdaptiveQualityProvider";
 
-const Scene3D = dynamic(() => import("@/components/ui/Scene3D").then((m) => m.Scene3D), { ssr: false });
-
 type Chapter = { year: string; title: string; text: string };
-type AudioPreset = "soft" | "epic";
 type ProjectMood = {
   tone: "gourmet" | "sonic" | "executive" | "arcade";
   aura: [string, string];
@@ -57,15 +50,6 @@ type Project = {
 type SceneTone = "amber" | "rose" | "cyan";
 type SceneId = "intro" | "journey" | "skills" | "projects" | "contact";
 type StorySection = { id: SceneId; label: string; cue: string; code: string };
-type AudioEngine = {
-  context: AudioContext;
-  analyser: AnalyserNode;
-  gain: GainNode;
-  filter: BiquadFilterNode;
-  oscA: OscillatorNode;
-  oscB: OscillatorNode;
-  data: Uint8Array;
-};
 
 const chapters: Chapter[] = [
   { year: "2022", title: "The First Frame", text: "Started as a CS & Statistics student, learning to turn data into stories." },
@@ -190,8 +174,8 @@ function WordReveal({
         <motion.span
           key={`${word}-${index}`}
           className="inline-block pr-[0.35em]"
-          initial={{ opacity: 0, y: 18, filter: "blur(8px)" }}
-          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          initial={{ opacity: 0, y: 18 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.9 }}
           transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1], delay: initialDelay + index * delayStep }}
         >
@@ -216,87 +200,26 @@ function SceneDivider({ tone = "amber" }: { tone?: SceneTone }) {
     >
       <span className="scene-divider-tag">Scene Cut</span>
       <div className="scene-divider-line" />
-      <motion.div
-        className="scene-divider-beam"
-        animate={reducedMotion ? undefined : { x: ["-55%", "55%", "-55%"] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-      />
+      <div className="scene-divider-beam" />
       <div className="scene-divider-haze" />
     </motion.div>
   );
 }
 
 function SceneAtmosphere({ scene }: { scene: SceneId }) {
-  return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={scene}
-        className={`scene-atmosphere scene-atmosphere-${scene} pointer-events-none fixed inset-0 z-[0]`}
-        initial={{ opacity: 0, scale: 1.02 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-        aria-hidden
-      />
-    </AnimatePresence>
-  );
+  void scene;
+  return null;
 }
 
 function SceneCutFlash({ cutToken }: { cutToken: number }) {
-  const reducedMotion = useReducedMotion();
-  if (reducedMotion) return null;
-  return (
-    <AnimatePresence>
-      {cutToken > 0 && (
-        <motion.div
-          key={cutToken}
-          className="scene-cut-flash pointer-events-none fixed inset-0 z-[170]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 0.7, 0] }}
-          transition={{ duration: 0.52, ease: "easeOut" }}
-          aria-hidden
-        >
-          <motion.div
-            className="scene-cut-flash-streak"
-            initial={{ x: "-55%", opacity: 0 }}
-            animate={{ x: "55%", opacity: [0, 0.8, 0] }}
-            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-          />
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
+  void cutToken;
+  return null;
 }
 
 function StoryHud({ activeScene, scrollYProgress }: { activeScene: SceneId; scrollYProgress: MotionValue<number> }) {
-  const progress = useSpring(scrollYProgress, { stiffness: 90, damping: 24, restDelta: 0.001 });
-  const driftY = useTransform(scrollYProgress, [0, 1], [0, -24]);
-  return (
-    <aside className="cinema-hud pointer-events-none fixed right-8 top-1/2 z-[136] hidden -translate-y-1/2 xl:block">
-      <motion.div style={{ y: driftY }} className="cinema-hud-shell">
-        <p className="cinema-hud-kicker">Story Chapters</p>
-        <div className="cinema-hud-track-wrap">
-          <div className="cinema-hud-track">
-            <motion.span className="cinema-hud-track-fill" style={{ scaleY: progress }} />
-          </div>
-        </div>
-        <ul className="mt-4 space-y-2">
-          {storySections.map((section) => (
-            <li key={section.id}>
-              <a
-                href={`#${section.id}`}
-                className={`cinema-hud-link pointer-events-auto ${section.id === activeScene ? "is-active" : ""}`}
-              >
-                <span className="cinema-hud-code">{section.code}</span>
-                <span className="cinema-hud-label">{section.label}</span>
-                <span className="cinema-hud-cue">{section.cue}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </motion.div>
-    </aside>
-  );
+  void activeScene;
+  void scrollYProgress;
+  return null;
 }
 
 function CinematicPreloader({ onFinish, quality }: { onFinish: () => void; quality: QualityLevel }) {
@@ -328,11 +251,11 @@ function CinematicPreloader({ onFinish, quality }: { onFinish: () => void; quali
       className="cinema-preloader fixed inset-0 z-[240] flex items-center justify-center px-6"
       initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, filter: "blur(8px)" }}
+      exit={{ opacity: 0 }}
       transition={{ duration: 0.7, ease: "easeInOut" }}
     >
       <motion.div
-        className="cinema-preloader-shell relative w-full max-w-2xl rounded-[2rem] border border-white/15 bg-black/45 p-7 backdrop-blur-xl md:p-10"
+        className="cinema-preloader-shell relative w-full max-w-2xl rounded-[2rem] border border-white/15 bg-black/45 p-7 md:p-10"
         initial={{ scale: 0.96, y: 16 }}
         animate={{ scale: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
@@ -368,293 +291,9 @@ function CinematicPreloader({ onFinish, quality }: { onFinish: () => void; quali
   );
 }
 function ScrollReactiveLayer({ scrollYProgress, quality }: { scrollYProgress: MotionValue<number>; quality: QualityLevel }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const scrollLevelRef = useRef(0);
-  const audioEngineRef = useRef<AudioEngine | null>(null);
-  const [audioEnabled, setAudioEnabled] = useState(false);
-  const [audioPreset, setAudioPreset] = useState<AudioPreset>("epic");
-  const reducedMotion = useReducedMotion();
-
-  const getPresetConfig = useCallback((preset: AudioPreset) => {
-    if (preset === "epic") {
-      return {
-        oscAType: "sawtooth" as OscillatorType,
-        oscBType: "triangle" as OscillatorType,
-        oscABase: 86,
-        oscARange: 248,
-        harmonic: 1.66,
-        filterBase: 420,
-        filterRange: 1980,
-        gainOn: 0.021,
-        gainBase: 0.0115,
-        gainRange: 0.012,
-        smooth: 0.9,
-        q: 1.05,
-        synthBlend: 0.88,
-        barBoost: 1.22,
-        waveBoost: 1.25,
-        palette: ["rgba(56, 189, 248, 0.98)", "rgba(251, 191, 36, 0.84)", "rgba(251, 113, 133, 0.9)"] as const,
-      };
-    }
-
-    return {
-      oscAType: "triangle" as OscillatorType,
-      oscBType: "sine" as OscillatorType,
-      oscABase: 74,
-      oscARange: 176,
-      harmonic: 1.46,
-      filterBase: 320,
-      filterRange: 1180,
-      gainOn: 0.013,
-      gainBase: 0.0076,
-      gainRange: 0.0078,
-      smooth: 0.82,
-      q: 0.78,
-      synthBlend: 0.62,
-      barBoost: 0.82,
-      waveBoost: 0.86,
-      palette: ["rgba(125, 211, 252, 0.92)", "rgba(186, 230, 253, 0.75)", "rgba(244, 244, 245, 0.68)"] as const,
-    };
-  }, []);
-
-  useMotionValueEvent(scrollYProgress, "change", (v) => {
-    scrollLevelRef.current = v;
-  });
-
-  const createAudioEngine = useCallback((): AudioEngine | null => {
-    if (typeof window === "undefined") return null;
-    const AudioContextClass =
-      window.AudioContext ||
-      (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!AudioContextClass) return null;
-    const cfg = getPresetConfig(audioPreset);
-
-    const context = new AudioContextClass();
-    const analyser = context.createAnalyser();
-    analyser.fftSize = 256;
-    analyser.smoothingTimeConstant = cfg.smooth;
-    const filter = context.createBiquadFilter();
-    filter.type = "lowpass";
-    filter.frequency.value = cfg.filterBase;
-    filter.Q.value = cfg.q;
-    const gain = context.createGain();
-    gain.gain.value = 0.00001;
-    const oscA = context.createOscillator();
-    const oscB = context.createOscillator();
-    oscA.type = cfg.oscAType;
-    oscB.type = cfg.oscBType;
-    oscA.frequency.value = cfg.oscABase;
-    oscB.frequency.value = cfg.oscABase * cfg.harmonic;
-    oscA.connect(filter);
-    oscB.connect(filter);
-    filter.connect(gain);
-    gain.connect(analyser);
-    analyser.connect(context.destination);
-    oscA.start();
-    oscB.start();
-    return {
-      context,
-      analyser,
-      gain,
-      filter,
-      oscA,
-      oscB,
-      data: new Uint8Array(analyser.frequencyBinCount) as Uint8Array<ArrayBuffer>,
-    };
-  }, [audioPreset, getPresetConfig]);
-
-  const disposeAudio = useCallback(async () => {
-    const engine = audioEngineRef.current;
-    if (!engine) return;
-    const now = engine.context.currentTime;
-    engine.gain.gain.cancelScheduledValues(now);
-    engine.gain.gain.setTargetAtTime(0.00001, now, 0.12);
-    try {
-      engine.oscA.stop(now + 0.2);
-      engine.oscB.stop(now + 0.2);
-    } catch {
-      // no-op
-    }
-    setTimeout(() => void engine.context.close(), 260);
-    audioEngineRef.current = null;
-  }, []);
-
-  const handleToggleAudio = useCallback(async () => {
-    if (audioEnabled) {
-      setAudioEnabled(false);
-      await disposeAudio();
-      return;
-    }
-    let engine = audioEngineRef.current;
-    if (!engine) {
-      engine = createAudioEngine();
-      if (!engine) return;
-      audioEngineRef.current = engine;
-    }
-    await engine.context.resume();
-    const now = engine.context.currentTime;
-    const cfg = getPresetConfig(audioPreset);
-    engine.gain.gain.cancelScheduledValues(now);
-    engine.gain.gain.linearRampToValueAtTime(cfg.gainOn, now + 0.38);
-    setAudioEnabled(true);
-  }, [audioEnabled, audioPreset, createAudioEngine, disposeAudio, getPresetConfig]);
-
-  useEffect(() => {
-    const engine = audioEngineRef.current;
-    if (!engine) return;
-    const cfg = getPresetConfig(audioPreset);
-    const now = engine.context.currentTime;
-
-    engine.oscA.type = cfg.oscAType;
-    engine.oscB.type = cfg.oscBType;
-    engine.filter.Q.value = cfg.q;
-    engine.analyser.smoothingTimeConstant = cfg.smooth;
-    engine.filter.frequency.setTargetAtTime(cfg.filterBase + scrollLevelRef.current * cfg.filterRange, now, 0.16);
-    engine.gain.gain.setTargetAtTime(audioEnabled ? cfg.gainBase + scrollLevelRef.current * cfg.gainRange : 0.00001, now, 0.2);
-  }, [audioEnabled, audioPreset, getPresetConfig]);
-
-  useEffect(() => {
-    if (!audioEnabled) return undefined;
-    const cfg = getPresetConfig(audioPreset);
-    let raf = 0;
-    const modulate = () => {
-      const e = audioEngineRef.current;
-      if (e) {
-        const level = scrollLevelRef.current;
-        const now = e.context.currentTime;
-        const base = cfg.oscABase + level * cfg.oscARange;
-        e.oscA.frequency.setTargetAtTime(base, now, 0.12);
-        e.oscB.frequency.setTargetAtTime(base * cfg.harmonic, now, 0.12);
-        e.filter.frequency.setTargetAtTime(cfg.filterBase + level * cfg.filterRange, now, 0.18);
-        e.gain.gain.setTargetAtTime(cfg.gainBase + level * cfg.gainRange, now, 0.2);
-      }
-      raf = requestAnimationFrame(modulate);
-    };
-    raf = requestAnimationFrame(modulate);
-    return () => cancelAnimationFrame(raf);
-  }, [audioEnabled, audioPreset, getPresetConfig]);
-
-  useEffect(() => () => void disposeAudio(), [disposeAudio]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return undefined;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return undefined;
-    const cfg = getPresetConfig(audioPreset);
-    let raf = 0;
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const width = window.innerWidth;
-      const height = Math.max(120, Math.round(window.innerHeight * 0.28));
-      canvas.width = Math.floor(width * dpr);
-      canvas.height = Math.floor(height * dpr);
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-    const draw = () => {
-      const width = canvas.clientWidth || window.innerWidth;
-      const height = canvas.clientHeight || Math.round(window.innerHeight * 0.28);
-      const level = scrollLevelRef.current;
-      const time = performance.now() * 0.0014;
-      const horizon = Math.min(220, height * 0.9);
-      const midY = horizon * 0.56;
-      ctx.clearRect(0, 0, width, height);
-
-      const wash = ctx.createLinearGradient(0, 0, 0, horizon);
-      wash.addColorStop(0, `rgba(12, 18, 28, ${0.1 + level * (audioPreset === "epic" ? 0.29 : 0.2)})`);
-      wash.addColorStop(1, "rgba(12, 18, 28, 0)");
-      ctx.fillStyle = wash;
-      ctx.fillRect(0, 0, width, horizon);
-
-      const engine = audioEngineRef.current;
-      const freqData = engine && audioEnabled ? engine.data : null;
-      if (freqData && engine) engine.analyser.getByteFrequencyData(freqData as Uint8Array<ArrayBuffer>);
-
-      const barCount = Math.max(18, Math.floor(width / 32));
-      const step = width / barCount;
-      const barWidth = Math.max(2.5, step * 0.5);
-      for (let i = 0; i < barCount; i += 1) {
-        const fIndex = freqData ? Math.floor((i / barCount) * freqData.length) : 0;
-        const fValue = freqData ? freqData[fIndex] / 255 : 0;
-        const synthetic = (Math.sin(time * 2.8 + i * 0.36 + level * 8.5) + 1) / 2;
-        const amp = Math.max(fValue, synthetic * (reducedMotion ? 0.35 : cfg.synthBlend));
-        const barHeight = 7 + amp * (24 + level * (reducedMotion ? 42 : 110 * cfg.barBoost));
-        const x = i * step + (step - barWidth) * 0.5;
-        const y = midY - barHeight * 0.5;
-        const grad = ctx.createLinearGradient(0, y, 0, y + barHeight);
-        grad.addColorStop(0, cfg.palette[0]);
-        grad.addColorStop(0.5, cfg.palette[1]);
-        grad.addColorStop(1, cfg.palette[2]);
-        ctx.fillStyle = grad;
-        ctx.fillRect(x, y, barWidth, barHeight);
-      }
-
-      ctx.beginPath();
-      for (let x = 0; x <= width; x += 8) {
-        const ratio = x / width;
-        const fIndex = freqData ? Math.floor(ratio * (freqData.length - 1)) : 0;
-        const fValue = freqData ? freqData[fIndex] / 255 : 0;
-        const synthetic = (Math.sin(time * 3.1 + x * 0.023 + level * 7) + 1) / 2;
-        const amp = Math.max(fValue, synthetic * cfg.synthBlend);
-        const waveY = midY + Math.sin(x * 0.02 + time * 4.6) * (4 + amp * (15 + level * 32 * cfg.waveBoost));
-        if (x === 0) ctx.moveTo(x, waveY);
-        else ctx.lineTo(x, waveY);
-      }
-      ctx.strokeStyle = audioPreset === "epic" ? `rgba(254, 226, 226, ${0.24 + level * 0.43})` : `rgba(229, 240, 255, ${0.16 + level * 0.38})`;
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      raf = requestAnimationFrame(draw);
-    };
-
-    window.addEventListener("resize", resize);
-    resize();
-    draw();
-    return () => {
-      window.removeEventListener("resize", resize);
-      cancelAnimationFrame(raf);
-    };
-  }, [audioEnabled, audioPreset, getPresetConfig, quality, reducedMotion]);
-
-  return (
-    <>
-      <canvas ref={canvasRef} className="pointer-events-none fixed left-0 right-0 top-0 z-[90] opacity-80" />
-      <div className="pointer-events-auto fixed bottom-4 left-4 z-[200] md:bottom-6 md:left-6">
-        <button
-          type="button"
-          onClick={handleToggleAudio}
-          className="audio-pulse-toggle inline-flex items-center gap-2 rounded-full border border-white/30 bg-black/45 px-4 py-2 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[#f8eddc] backdrop-blur-xl transition hover:bg-white/10"
-        >
-          {audioEnabled ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
-          {audioEnabled ? "Disable Pulse Audio" : "Enable Pulse Audio"}
-        </button>
-        <div className="mt-2 inline-flex items-center gap-1 rounded-full border border-white/20 bg-black/40 p-1 backdrop-blur-xl">
-          {(["soft", "epic"] as const).map((preset) => {
-            const active = audioPreset === preset;
-            return (
-              <button
-                key={preset}
-                type="button"
-                onClick={() => setAudioPreset(preset)}
-                className={[
-                  "rounded-full px-3 py-1 text-[0.58rem] font-semibold uppercase tracking-[0.14em] transition",
-                  active ? "bg-white/18 text-[#fff5e5]" : "text-[#f8eddc]/72 hover:bg-white/10 hover:text-[#fff5e5]",
-                ].join(" ")}
-                aria-pressed={active}
-              >
-                {preset}
-              </button>
-            );
-          })}
-        </div>
-        <p className="mt-1 text-[0.58rem] uppercase tracking-[0.14em] text-[#f8eddc]/60">
-          Pulse Preset: {audioPreset === "epic" ? "Epic" : "Soft"}
-        </p>
-        <p className="mt-2 text-[0.6rem] uppercase tracking-[0.14em] text-[#f8eddc]/62">No autoplay. Manual trigger only.</p>
-      </div>
-    </>
-  );
+  void scrollYProgress;
+  void quality;
+  return null;
 }
 export default function Home() {
   const { scrollYProgress } = useScroll();
@@ -734,10 +373,6 @@ export default function Home() {
         {!preloading && <SceneCutFlash cutToken={cutToken} />}
         <StoryHud activeScene={activeScene} scrollYProgress={scrollYProgress} />
         {!preloading && <ScrollReactiveLayer scrollYProgress={scrollYProgress} quality={quality} />}
-        <div className="cinema-letterbox cinema-letterbox-top pointer-events-none fixed inset-x-0 top-0 z-[100]" />
-        <div className="cinema-letterbox cinema-letterbox-bottom pointer-events-none fixed inset-x-0 bottom-0 z-[100]" />
-        <div className="cinema-vignette pointer-events-none fixed inset-0 z-[1]" />
-        <div className="cinema-grain pointer-events-none fixed inset-0 z-[2]" />
 
         <motion.div
           className="fixed left-0 right-0 top-0 z-[122] h-[3px] origin-left bg-[linear-gradient(90deg,#f59e0b,#fb7185,#38bdf8)]"
@@ -745,7 +380,7 @@ export default function Home() {
         />
 
         <header className="fixed left-0 right-0 top-0 z-[112] px-6 pt-5 md:px-10 lg:px-16">
-          <div className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-white/15 bg-black/35 px-5 py-3 backdrop-blur-xl">
+          <div className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-white/15 bg-black/35 px-5 py-3">
             <p className="font-cinema-display text-sm tracking-[0.28em] text-[#facc15]">RAP</p>
             <nav className="hidden items-center gap-6 text-[0.8rem] uppercase tracking-[0.18em] text-[#f8ede0]/80 sm:flex">
               <a href="#journey" className="transition hover:text-white">Journey</a>
@@ -760,18 +395,6 @@ export default function Home() {
         </header>
 
         <section id="intro" data-scene-id="intro" className="relative isolate min-h-[100svh] px-6 pb-16 pt-28 md:px-10 md:pt-36 lg:px-16">
-          <div className="pointer-events-none absolute inset-x-0 top-[-7rem] hidden h-[40rem] lg:block"><Scene3D /></div>
-          <motion.div
-            className="cinema-light-orb cinema-light-orb-left"
-            animate={reducedMotion ? undefined : { x: [0, 18, 0], y: [0, -12, 0] }}
-            transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="cinema-light-orb cinema-light-orb-right"
-            animate={reducedMotion ? undefined : { x: [0, -20, 0], y: [0, 16, 0] }}
-            transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-          />
-
           <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative z-10 mx-auto max-w-6xl">
             <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-200/30 bg-amber-300/10 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-amber-200">
               <Sparkles className="h-3.5 w-3.5" />
@@ -857,7 +480,7 @@ export default function Home() {
                   transition={{ duration: 0.6, delay: idx * 0.08 }}
                 >
                   <div className="absolute left-0 top-7 h-3 w-3 -translate-x-[1px] rounded-full bg-[#fbbf24] shadow-[0_0_18px_rgba(251,191,36,.85)] md:right-[-4.6%] md:left-auto" />
-                  <div className="ml-7 rounded-2xl border border-white/15 bg-black/28 p-5 backdrop-blur-sm md:ml-0">
+                  <div className="ml-7 rounded-2xl border border-white/15 bg-black/28 p-5 md:ml-0">
                     <p className="font-cinema-display text-lg text-[#fbbf24]">{chapter.year}</p>
                     <h3 className="mt-1 text-xl font-semibold text-[#fff8ee]">{chapter.title}</h3>
                     <p className="mt-2 text-sm leading-relaxed text-[#f8eddc]/76">{chapter.text}</p>
@@ -915,12 +538,10 @@ export default function Home() {
                     whileHover={reducedMotion ? undefined : project.mood.hover}
                     style={{ ...cardStyle, transformPerspective: 1100, transformStyle: "preserve-3d" }}
                   >
-                    <div className="project-card-aura" aria-hidden />
-                    <div className="project-card-sheen" aria-hidden />
                     <div className="relative aspect-[16/10] overflow-hidden">
                       <Image src={project.image} alt={`${project.title} preview`} fill className="object-cover transition duration-700 group-hover:scale-110" />
                       <div className="project-card-overlay absolute inset-0" />
-                      <div className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-black/35 backdrop-blur-sm">
+                      <div className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-black/35">
                         <Icon className="h-5 w-5" style={{ color: "var(--project-icon)" }} />
                       </div>
                     </div>
@@ -956,7 +577,7 @@ export default function Home() {
         <SceneDivider tone="cyan" />
         <section id="contact" data-scene-id="contact" className="relative z-10 px-6 pb-24 md:px-10 lg:px-16">
           <motion.div
-            className="mx-auto max-w-6xl rounded-[2rem] border border-white/15 bg-black/35 px-6 py-10 backdrop-blur-xl md:px-10 md:py-14"
+            className="mx-auto max-w-6xl rounded-[2rem] border border-white/15 bg-black/35 px-6 py-10 md:px-10 md:py-14"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
