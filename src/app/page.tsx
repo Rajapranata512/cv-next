@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type FormEvent as ReactFormEvent,
   type FocusEvent as ReactFocusEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
@@ -14,29 +15,38 @@ import Image from "next/image";
 import {
   AnimatePresence,
   motion,
+  useInView,
   useMotionValueEvent,
   useReducedMotion,
   useScroll,
   useSpring,
-  useTransform,
   useMotionTemplate,
+  useTransform,
   type MotionValue,
 } from "framer-motion";
 import {
   ArrowRight,
   ChartNoAxesCombined,
+  ChevronLeft,
+  ChevronRight,
   Code2,
   Database,
   ExternalLink,
   Film,
+  Github,
+  Linkedin,
   Mail,
+  MessageCircleMore,
+  Send,
   SkipForward,
   Sparkles,
   Volume2,
   VolumeX,
+  X,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useAdaptiveQuality, type QualityLevel } from "@/components/ui/AdaptiveQualityProvider";
+import { Magnetic } from "@/components/ui/Magnetic";
 
 const Scene3D = dynamic(() => import("@/components/ui/Scene3D").then((m) => m.Scene3D), { ssr: false });
 
@@ -72,10 +82,23 @@ type Project = {
   icon: LucideIcon;
   mood: ProjectMood;
   cue: ProjectCueTheme;
+  year: string;
+  role: string;
+  spotlight: string;
+  metrics: string[];
+  narrative: string[];
 };
 type SceneTone = "amber" | "rose" | "cyan";
 type SceneId = "intro" | "journey" | "skills" | "projects" | "contact";
 type StorySection = { id: SceneId; label: string; cue: string; code: string };
+type HeroStat = { label: string; value: number; suffix?: string };
+type SkillBand = { name: string; level: number; cue: string; accent: string };
+type ContactDraft = {
+  name: string;
+  email: string;
+  focus: string;
+  message: string;
+};
 type ScenePalette = {
   primary: string;
   secondary: string;
@@ -107,6 +130,15 @@ const projects: Project[] = [
     image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=2070&auto=format&fit=crop",
     tags: ["Laravel", "Blade", "Tailwind", "SQLite/MySQL"],
     icon: Code2,
+    year: "2026",
+    role: "Full-stack product build",
+    spotlight: "A recipe platform staged like a premium food brand, balancing account flow, CRUD depth, and editorial presentation.",
+    metrics: ["Auth + CRUD", "Responsive detail flow", "Live deployment"],
+    narrative: [
+      "Designed a recipe browsing flow that keeps content rich without overwhelming the reader.",
+      "Built an end-to-end Laravel stack including authentication, content management, and polished detail templates.",
+      "Focused on making everyday utility features feel cinematic through layout rhythm, image hierarchy, and motion cues.",
+    ],
     mood: {
       tone: "gourmet",
       aura: ["rgba(251, 191, 36, 0.34)", "rgba(249, 115, 22, 0.3)"],
@@ -135,6 +167,15 @@ const projects: Project[] = [
     image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=2070&auto=format&fit=crop",
     tags: ["Python", "Research", "Statistics"],
     icon: Database,
+    year: "2023",
+    role: "Research and analytics",
+    spotlight: "A data-led research piece translating statistical analysis into a clearer narrative around music and mental health.",
+    metrics: ["Published paper", "Python analysis", "Statistical reporting"],
+    narrative: [
+      "Used Python to examine patterns in a mental-health dataset through a research lens instead of a dashboard lens.",
+      "Structured the findings so the technical analysis could still read clearly for non-technical reviewers.",
+      "Balanced evidence, method transparency, and narrative pacing to make the paper persuasive and defensible.",
+    ],
     mood: {
       tone: "sonic",
       aura: ["rgba(56, 189, 248, 0.3)", "rgba(167, 139, 250, 0.28)"],
@@ -163,6 +204,15 @@ const projects: Project[] = [
     image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2026&auto=format&fit=crop",
     tags: ["Tableau", "SQL", "Visualization"],
     icon: ChartNoAxesCombined,
+    year: "2025",
+    role: "Analytics and decision support",
+    spotlight: "Executive-facing KPI storytelling designed to help people read performance quickly and act with confidence.",
+    metrics: ["Executive dashboarding", "Segmentation views", "KPI monitoring"],
+    narrative: [
+      "Created dashboard compositions that prioritize signal over visual clutter for decision makers.",
+      "Combined SQL thinking, segmentation logic, and Tableau design to expose trends and business outliers.",
+      "Shaped the experience around scanability so the story emerges in seconds, not after explanation.",
+    ],
     mood: {
       tone: "executive",
       aura: ["rgba(45, 212, 191, 0.28)", "rgba(56, 189, 248, 0.24)"],
@@ -191,6 +241,15 @@ const projects: Project[] = [
     image: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop",
     tags: ["HTML", "CSS", "JavaScript", "Figma"],
     icon: Film,
+    year: "2024",
+    role: "Interactive front-end direction",
+    spotlight: "A game-inspired web showcase where interface drama, atmosphere, and multi-page exploration work as one system.",
+    metrics: ["Multi-page architecture", "High-energy UI", "Prototype to build"],
+    narrative: [
+      "Started from a strong visual concept and carried it through prototype, layout, and front-end implementation.",
+      "Used motion and tonal contrast to create a more immersive feeling without losing navigational clarity.",
+      "Treated the site like a world, not just a set of pages, so every section reinforces the same mood.",
+    ],
     mood: {
       tone: "arcade",
       aura: ["rgba(251, 113, 133, 0.32)", "rgba(244, 63, 94, 0.28)"],
@@ -215,10 +274,16 @@ const projects: Project[] = [
 ];
 
 const reelSkills = ["TypeScript", "Next.js", "Laravel", "Python", "R", "SQL", "Tableau", "Figma", "Tailwind CSS"];
-const stats = [
-  { label: "Projects Built", value: "12+" },
-  { label: "Research Works", value: "3" },
-  { label: "Dashboard Cases", value: "20+" },
+const heroStats: HeroStat[] = [
+  { label: "Projects Built", value: 12, suffix: "+" },
+  { label: "Research Works", value: 3 },
+  { label: "Dashboard Cases", value: 20, suffix: "+" },
+];
+const skillBands: SkillBand[] = [
+  { name: "Experience Design", level: 94, cue: "Motion systems, visual hierarchy, premium landing pages", accent: "#fbbf24" },
+  { name: "Front-end Engineering", level: 91, cue: "Next.js, TypeScript, Tailwind, interaction architecture", accent: "#38bdf8" },
+  { name: "Data Storytelling", level: 88, cue: "Python, R, dashboard narratives, analytical framing", accent: "#f97316" },
+  { name: "Product Delivery", level: 85, cue: "Shipping complete flows from concept to deployable build", accent: "#fb7185" },
 ];
 const storySections: StorySection[] = [
   { id: "intro", label: "Opening", cue: "Set the tone", code: "SCN-01" },
@@ -241,6 +306,10 @@ const sceneCueMap: Record<SceneId, { frequency: number; pan: number }> = {
   projects: { frequency: 329, pan: 0.24 },
   contact: { frequency: 392, pan: 0.36 },
 };
+
+function wrapProjectIndex(index: number) {
+  return (index + projects.length) % projects.length;
+}
 
 function colorWithAlpha(color: string, alpha: number): string {
   const safeAlpha = Math.min(1, Math.max(0, alpha));
@@ -270,6 +339,76 @@ function colorWithAlpha(color: string, alpha: number): string {
   }
 
   return color;
+}
+
+function CountUpNumber({
+  value,
+  suffix = "",
+  className = "",
+}: {
+  value: number;
+  suffix?: string;
+  className?: string;
+}) {
+  const reducedMotion = useReducedMotion();
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-10% 0px -15% 0px" });
+  const spring = useSpring(0, { stiffness: 110, damping: 22, mass: 0.8 });
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    spring.set(inView ? value : 0);
+  }, [inView, spring, value]);
+
+  useMotionValueEvent(spring, "change", (latest) => {
+    setDisplayValue(Math.round(latest));
+  });
+
+  return (
+    <span ref={ref} className={className}>
+      {reducedMotion ? value : displayValue}
+      {suffix}
+    </span>
+  );
+}
+
+function SkillBandMeter({ band, index }: { band: SkillBand; index: number }) {
+  const reducedMotion = useReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-10% 0px -10% 0px" });
+
+  return (
+    <motion.div
+      ref={ref}
+      className="skill-meter-shell"
+      style={
+        {
+          "--skill-accent": band.accent,
+          "--skill-accent-soft": colorWithAlpha(band.accent, 0.2),
+        } as CSSProperties
+      }
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.35 }}
+      transition={{ duration: 0.55, delay: index * 0.08 }}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm uppercase tracking-[0.2em] text-[#fff1d5]/72">{band.name}</p>
+          <p className="mt-2 max-w-lg text-sm leading-relaxed text-[#f8eddc]/72">{band.cue}</p>
+        </div>
+        <CountUpNumber value={band.level} suffix="%" className="font-cinema-display text-2xl text-[#fff5e5]" />
+      </div>
+      <div className="skill-meter-track mt-5">
+        <motion.span
+          className="skill-meter-fill"
+          initial={reducedMotion ? undefined : { width: 0 }}
+          animate={{ width: `${inView ? band.level : 0}%` }}
+          transition={{ duration: reducedMotion ? 0 : 0.9, ease: [0.22, 1, 0.36, 1], delay: index * 0.08 + 0.05 }}
+        />
+      </div>
+    </motion.div>
+  );
 }
 
 function WordReveal({
@@ -557,6 +696,8 @@ function ProjectReelCard({
   isActive,
   onActivate,
   onDeactivate,
+  onFocusProject,
+  onOpenDetails,
 }: {
   project: Project;
   idx: number;
@@ -565,6 +706,8 @@ function ProjectReelCard({
   isActive: boolean;
   onActivate: () => void;
   onDeactivate: () => void;
+  onFocusProject: () => void;
+  onOpenDetails: () => void;
 }) {
   const Icon = project.icon;
   const tiltX = useSpring(0, { stiffness: 180, damping: 22, mass: 0.34 });
@@ -701,8 +844,524 @@ function ProjectReelCard({
             </span>
           ))}
         </div>
+        <div className="flex flex-wrap items-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onFocusProject}
+            data-cursor="Focus"
+            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.06] px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#fff4dd] transition hover:border-white/35 hover:bg-white/10"
+          >
+            Focus Reel <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={onOpenDetails}
+            data-cursor="Inspect"
+            className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-[0.72rem] uppercase tracking-[0.16em] text-[#f8eddc]/72 transition hover:border-[var(--project-accent-soft)] hover:text-white"
+          >
+            Open Scene
+          </button>
+        </div>
       </div>
     </motion.article>
+  );
+}
+
+function FeaturedProjectSlider({
+  activeIndex,
+  immersiveMode,
+  onChange,
+  onOpenDetails,
+}: {
+  activeIndex: number;
+  immersiveMode: boolean;
+  onChange: (index: number) => void;
+  onOpenDetails: (index: number) => void;
+}) {
+  const reducedMotion = useReducedMotion();
+  const project = projects[activeIndex];
+
+  return (
+    <motion.div
+      className="featured-reel-shell cinema-panel relative overflow-hidden rounded-[2rem] border border-white/15 p-4 md:p-6"
+      initial={{ opacity: 0, y: 28 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.65 }}
+      style={
+        {
+          "--featured-accent": project.mood.accent,
+          "--featured-accent-soft": colorWithAlpha(project.mood.accent, 0.22),
+        } as CSSProperties
+      }
+    >
+      <div className="featured-reel-glow" aria-hidden />
+      <div className="grid gap-6 lg:grid-cols-[1.12fr_0.88fr] lg:items-stretch">
+        <div className="relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-black/30">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={project.title}
+              className="group/feature relative aspect-[16/11] overflow-hidden"
+              initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.04 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <Image
+                src={project.image}
+                alt={`${project.title} featured visual`}
+                fill
+                priority={activeIndex === 0}
+                className="object-cover transition duration-700 group-hover/feature:scale-[1.06]"
+              />
+              <div className="featured-reel-overlay absolute inset-0" />
+              {immersiveMode && <div className="featured-reel-scan absolute inset-0" aria-hidden />}
+              <div className="absolute left-4 top-4 rounded-full border border-white/20 bg-black/40 px-3 py-1 text-[0.58rem] uppercase tracking-[0.18em] text-[#fff1d7]">
+                Featured Scene
+              </div>
+              <div className="absolute bottom-4 left-4 right-4 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="text-[0.62rem] uppercase tracking-[0.2em] text-[#f8eddc]/70">{project.year} / {project.role}</p>
+                  <h3 className="font-cinema-display mt-2 text-3xl text-[#fff6e7] md:text-4xl">{project.title}</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onOpenDetails(activeIndex)}
+                  data-cursor="Details"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/35 px-4 py-2 text-[0.72rem] uppercase tracking-[0.16em] text-[#fff4de] backdrop-blur-md transition hover:border-white/35 hover:bg-black/52"
+                >
+                  Open Details <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <div className="flex flex-col justify-between gap-5">
+          <div>
+            <div className="mb-4 flex flex-wrap items-center gap-2 text-[0.6rem] uppercase tracking-[0.18em] text-[#f8eddc]/66">
+              <span className="rounded-full border border-white/15 bg-white/5 px-3 py-1">Featured Project Slider</span>
+              <span className="rounded-full border border-[var(--featured-accent-soft)] bg-[var(--featured-accent-soft)] px-3 py-1 text-[#fff7eb]">
+                {project.cue.name}
+              </span>
+            </div>
+            <p className="text-sm leading-relaxed text-[#f8eddc]/80">{project.spotlight}</p>
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              {project.metrics.map((metric) => (
+                <div key={metric} className="featured-metric-card">
+                  <span>{metric}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {project.tags.map((tag) => (
+                <span key={tag} className="featured-tag">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="featured-progress-strip">
+              {projects.map((item, idx) => (
+                <button
+                  key={item.title}
+                  type="button"
+                  onClick={() => onChange(idx)}
+                  data-cursor={item.title}
+                  className={`featured-progress-segment ${idx === activeIndex ? "is-active" : ""}`}
+                  aria-label={`Focus ${item.title}`}
+                />
+              ))}
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex gap-2">
+                <Magnetic>
+                  <button
+                    type="button"
+                    onClick={() => onChange(wrapProjectIndex(activeIndex - 1))}
+                    data-cursor="Prev"
+                    className="featured-nav-button"
+                    aria-label="Previous project"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                </Magnetic>
+                <Magnetic>
+                  <button
+                    type="button"
+                    onClick={() => onChange(wrapProjectIndex(activeIndex + 1))}
+                    data-cursor="Next"
+                    className="featured-nav-button"
+                    aria-label="Next project"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </Magnetic>
+              </div>
+              <p className="text-[0.62rem] uppercase tracking-[0.18em] text-[#f8eddc]/62">
+                {String(activeIndex + 1).padStart(2, "0")} / {String(projects.length).padStart(2, "0")} scenes
+              </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {projects.map((item, idx) => (
+                <button
+                  key={`thumb-${item.title}`}
+                  type="button"
+                  onClick={() => onChange(idx)}
+                  data-cursor={item.title}
+                  className={`featured-thumb ${idx === activeIndex ? "is-active" : ""}`}
+                >
+                  <span className="font-cinema-display text-lg text-[#fff4e2]">{item.title}</span>
+                  <span className="text-[0.62rem] uppercase tracking-[0.16em] text-[#f8eddc]/62">{item.year}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function ProjectSceneModal({
+  project,
+  onClose,
+}: {
+  project: Project | null;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    if (!project) return undefined;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose, project]);
+
+  return (
+    <AnimatePresence>
+      {project && (
+        <motion.div
+          className="project-modal-backdrop fixed inset-0 z-[250] flex items-end justify-center p-4 md:items-center md:p-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+        >
+          <motion.div
+            className="project-modal-shell relative w-full max-w-5xl overflow-hidden rounded-[2rem] border border-white/12 bg-[#070b12]/92"
+            initial={{ opacity: 0, y: 32, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.985 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div
+              className="project-modal-aura"
+              style={
+                {
+                  "--project-modal-accent": project.mood.accent,
+                  "--project-modal-accent-soft": colorWithAlpha(project.mood.accent, 0.24),
+                } as CSSProperties
+              }
+              aria-hidden
+            />
+            <button
+              type="button"
+              onClick={onClose}
+              data-cursor="Close"
+              className="project-modal-close absolute right-4 top-4 z-10"
+              aria-label="Close project details"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="grid gap-6 p-5 md:p-8 lg:grid-cols-[1.08fr_0.92fr]">
+              <div className="space-y-4">
+                <div className="relative aspect-[16/10] overflow-hidden rounded-[1.5rem] border border-white/10">
+                  <Image src={project.image} alt={`${project.title} detail visual`} fill className="object-cover" />
+                  <div className="project-modal-image-overlay absolute inset-0" />
+                  <div className="absolute left-4 top-4 rounded-full border border-white/20 bg-black/36 px-3 py-1 text-[0.58rem] uppercase tracking-[0.18em] text-[#fff2d8]">
+                    {project.year} / {project.role}
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {project.metrics.map((metric) => (
+                    <div key={metric} className="project-modal-metric">
+                      {metric}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col justify-between gap-6">
+                <div>
+                  <p className="text-[0.62rem] uppercase tracking-[0.22em] text-[#f8eddc]/62">Project Detail Scene</p>
+                  <h3 className="font-cinema-display mt-3 text-4xl text-[#fff4e3] md:text-5xl">{project.title}</h3>
+                  <p className="mt-4 text-base leading-relaxed text-[#f8eddc]/80">{project.spotlight}</p>
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {project.tags.map((tag) => (
+                      <span key={tag} className="featured-tag">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="mt-6 space-y-3">
+                    {project.narrative.map((line) => (
+                      <div key={line} className="project-modal-note">
+                        <span className="project-modal-note-dot" aria-hidden />
+                        <p>{line}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-3">
+                  <Magnetic>
+                    <a
+                      href={project.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      data-cursor="Visit"
+                      className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#091018] transition hover:scale-[1.02]"
+                    >
+                      Visit Live Project <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </Magnetic>
+                  <Magnetic>
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      data-cursor="Back"
+                      className="inline-flex items-center gap-2 rounded-full border border-white/18 px-5 py-3 text-sm font-semibold text-[#fff3dc] transition hover:bg-white/10"
+                    >
+                      Back To Portfolio
+                    </button>
+                  </Magnetic>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function ContactConsole() {
+  const [form, setForm] = useState<ContactDraft>({
+    name: "",
+    email: "",
+    focus: "Internship or collaboration",
+    message: "",
+  });
+  const [hasSent, setHasSent] = useState(false);
+  const [errors, setErrors] = useState<Partial<Record<keyof ContactDraft, string>>>({});
+  const status = hasSent
+    ? "sent"
+    : form.name.trim() && form.email.trim() && form.message.trim()
+      ? "ready"
+      : "idle";
+
+  const handleFieldChange = useCallback((field: keyof ContactDraft, value: string) => {
+    setForm((current) => ({ ...current, [field]: value }));
+    setErrors((current) => {
+      if (!current[field]) return current;
+      const next = { ...current };
+      delete next[field];
+      return next;
+    });
+    setHasSent(false);
+  }, []);
+
+  const handleSubmit = useCallback(
+    (event: ReactFormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const nextErrors: Partial<Record<keyof ContactDraft, string>> = {};
+
+      if (!form.name.trim()) nextErrors.name = "Add your name";
+      if (!form.email.trim()) nextErrors.email = "Add a reply email";
+      if (!form.message.trim()) nextErrors.message = "Add a short project brief";
+
+      if (Object.keys(nextErrors).length > 0) {
+        setErrors(nextErrors);
+        setHasSent(false);
+        return;
+      }
+
+      const subject = encodeURIComponent(`Portfolio inquiry from ${form.name.trim()}`);
+      const body = encodeURIComponent(
+        [
+          `Name: ${form.name.trim()}`,
+          `Email: ${form.email.trim()}`,
+          `Focus: ${form.focus.trim() || "General inquiry"}`,
+          "",
+          form.message.trim(),
+        ].join("\n"),
+      );
+
+      window.location.href = `mailto:raja.pranata@binus.ac.id?subject=${subject}&body=${body}`;
+      setHasSent(true);
+    },
+    [form],
+  );
+
+  return (
+    <div className="contact-console-grid grid gap-8 xl:grid-cols-[0.9fr_1.1fr]">
+      <div className="space-y-5">
+        <div className="space-y-3">
+          <span className="inline-flex items-center gap-2 rounded-full border border-cyan-200/20 bg-cyan-300/10 px-4 py-1.5 text-[0.62rem] uppercase tracking-[0.18em] text-cyan-100">
+            <MessageCircleMore className="h-3.5 w-3.5" />
+            Contact Console
+          </span>
+          <p className="max-w-xl text-sm leading-relaxed text-[#f8eddc]/76 md:text-base">
+            Tell me what you are building, what stage you are in, and the kind of support you need. The form drafts a polished email so the first exchange is already structured.
+          </p>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <a
+            href="https://github.com/Rajapranata512"
+            target="_blank"
+            rel="noreferrer"
+            data-cursor="GitHub"
+            className="contact-link-card"
+          >
+            <Github className="h-4 w-4" />
+            <div>
+              <p className="text-[0.62rem] uppercase tracking-[0.18em] text-[#f8eddc]/58">Code</p>
+              <p className="text-sm text-[#fff5e6]">GitHub</p>
+            </div>
+          </a>
+          <a
+            href="https://www.linkedin.com/in/raja-adi-pranata-507704251/"
+            target="_blank"
+            rel="noreferrer"
+            data-cursor="LinkedIn"
+            className="contact-link-card"
+          >
+            <Linkedin className="h-4 w-4" />
+            <div>
+              <p className="text-[0.62rem] uppercase tracking-[0.18em] text-[#f8eddc]/58">Network</p>
+              <p className="text-sm text-[#fff5e6]">LinkedIn</p>
+            </div>
+          </a>
+          <a
+            href="mailto:raja.pranata@binus.ac.id"
+            data-cursor="Email"
+            className="contact-link-card"
+          >
+            <Mail className="h-4 w-4" />
+            <div>
+              <p className="text-[0.62rem] uppercase tracking-[0.18em] text-[#f8eddc]/58">Email</p>
+              <p className="text-sm text-[#fff5e6]">raja.pranata@binus.ac.id</p>
+            </div>
+          </a>
+          <a
+            href="https://wa.me/6285694890848"
+            target="_blank"
+            rel="noreferrer"
+            data-cursor="WhatsApp"
+            className="contact-link-card"
+          >
+            <MessageCircleMore className="h-4 w-4" />
+            <div>
+              <p className="text-[0.62rem] uppercase tracking-[0.18em] text-[#f8eddc]/58">Fastest</p>
+              <p className="text-sm text-[#fff5e6]">WhatsApp</p>
+            </div>
+          </a>
+        </div>
+
+        <div className="contact-status-panel">
+          <p className="text-[0.62rem] uppercase tracking-[0.18em] text-[#f8eddc]/58">Draft Status</p>
+          <p className="mt-2 text-sm leading-relaxed text-[#fff6e8]">
+            {status === "sent"
+              ? "Mail draft opened. If your mail client did not launch, use the direct email button instead."
+              : status === "ready"
+                ? "All key fields are filled. The message is ready to send."
+                : "Add your details and a short brief. The form will prepare the outreach message."}
+          </p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="contact-form-panel">
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="contact-field">
+            <span className="contact-field-label">Name</span>
+            <input
+              value={form.name}
+              onChange={(event) => handleFieldChange("name", event.target.value)}
+              placeholder="Your name"
+              data-cursor="Type"
+              className={`contact-input ${errors.name ? "is-error" : ""}`}
+            />
+            {errors.name && <span className="contact-field-error">{errors.name}</span>}
+          </label>
+          <label className="contact-field">
+            <span className="contact-field-label">Email</span>
+            <input
+              type="email"
+              value={form.email}
+              onChange={(event) => handleFieldChange("email", event.target.value)}
+              placeholder="you@example.com"
+              data-cursor="Type"
+              className={`contact-input ${errors.email ? "is-error" : ""}`}
+            />
+            {errors.email && <span className="contact-field-error">{errors.email}</span>}
+          </label>
+        </div>
+
+        <label className="contact-field mt-4">
+          <span className="contact-field-label">Focus</span>
+          <input
+            value={form.focus}
+            onChange={(event) => handleFieldChange("focus", event.target.value)}
+            placeholder="Internship, website redesign, dashboard build..."
+            data-cursor="Type"
+            className="contact-input"
+          />
+        </label>
+
+        <label className="contact-field mt-4">
+          <span className="contact-field-label">Project brief</span>
+          <textarea
+            value={form.message}
+            onChange={(event) => handleFieldChange("message", event.target.value)}
+            placeholder="Share the goal, timeline, and the kind of product or data experience you want to create."
+            rows={6}
+            data-cursor="Type"
+            className={`contact-input min-h-40 resize-none ${errors.message ? "is-error" : ""}`}
+          />
+          {errors.message && <span className="contact-field-error">{errors.message}</span>}
+        </label>
+
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+          <p className="text-[0.68rem] uppercase tracking-[0.18em] text-[#f8eddc]/54">
+            Manual send flow keeps outreach personal and concise.
+          </p>
+          <Magnetic>
+            <button
+              type="submit"
+              data-cursor="Send"
+              className={`contact-submit ${status === "ready" ? "is-ready" : ""}`}
+            >
+              Prepare Email Draft <Send className="h-4 w-4" />
+            </button>
+          </Magnetic>
+        </div>
+      </form>
+    </div>
   );
 }
 
@@ -1488,7 +2147,9 @@ export default function Home() {
   const [preloading, setPreloading] = useState(true);
   const [activeScene, setActiveScene] = useState<SceneId>("intro");
   const [cutToken, setCutToken] = useState(0);
-  const [activeProjectIndex, setActiveProjectIndex] = useState<number | null>(null);
+  const [featuredProjectIndex, setFeaturedProjectIndex] = useState(0);
+  const [hoveredProjectIndex, setHoveredProjectIndex] = useState<number | null>(null);
+  const [modalProjectIndex, setModalProjectIndex] = useState<number | null>(null);
   const [immersiveMode, setImmersiveMode] = useState<boolean>(() => {
     if (typeof window === "undefined") return true;
     try {
@@ -1498,7 +2159,9 @@ export default function Home() {
     }
   });
   const finishPreloader = useCallback(() => setPreloading((p) => (p ? false : p)), []);
-  const activeProject = immersiveMode && activeProjectIndex !== null ? (projects[activeProjectIndex] ?? null) : null;
+  const focusedProjectIndex = modalProjectIndex ?? hoveredProjectIndex ?? featuredProjectIndex;
+  const activeProject = immersiveMode ? (projects[focusedProjectIndex] ?? null) : null;
+  const modalProject = modalProjectIndex !== null ? (projects[modalProjectIndex] ?? null) : null;
   const activePalette = scenePalettes[activeScene];
   const accentColor = activeProject?.mood.accent ?? activePalette.accent;
   const secondaryColor = activeProject?.mood.icon ?? activePalette.secondary;
@@ -1584,6 +2247,7 @@ export default function Home() {
   return (
     <>
       <AnimatePresence>{preloading && <CinematicPreloader onFinish={finishPreloader} quality={quality} />}</AnimatePresence>
+      <ProjectSceneModal project={modalProject} onClose={() => setModalProjectIndex(null)} />
       <main
         className={[
           `cinema-root quality-${quality} relative min-h-screen overflow-x-clip text-[#f9f3e7]`,
@@ -1620,16 +2284,37 @@ export default function Home() {
         />
 
         <header className="fixed left-0 right-0 top-0 z-[112] px-6 pt-5 md:px-10 lg:px-16">
-          <div className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-full border border-white/15 bg-black/35 px-5 py-3 backdrop-blur-xl">
-            <p className="font-cinema-display text-sm tracking-[0.28em]" style={{ color: "var(--scene-accent)" }}>RAP</p>
-            <nav className="hidden items-center gap-6 text-[0.8rem] uppercase tracking-[0.18em] text-[#f8ede0]/80 sm:flex">
-              <a href="#journey" className="transition hover:text-white">Journey</a>
-              <a href="#skills" className="transition hover:text-white">Skills</a>
-              <a href="#projects" className="transition hover:text-white">Projects</a>
-              <a href="#contact" className="transition hover:text-white">Contact</a>
+          <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 rounded-full border border-white/15 bg-black/35 px-4 py-3 backdrop-blur-xl md:px-5">
+            <a
+              href="#intro"
+              data-cursor="Home"
+              className="font-cinema-display text-sm tracking-[0.28em] transition hover:opacity-100"
+              style={{ color: "var(--scene-accent)" }}
+            >
+              RAP
+            </a>
+            <nav className="hidden items-center gap-1 text-[0.72rem] uppercase tracking-[0.16em] text-[#f8ede0]/80 md:flex">
+              {storySections.map((section) => (
+                <a
+                  key={section.id}
+                  href={`#${section.id}`}
+                  data-cursor={section.label}
+                  className={`scene-nav-link ${activeScene === section.id ? "is-active" : ""}`}
+                  aria-current={activeScene === section.id ? "page" : undefined}
+                >
+                  {activeScene === section.id && <motion.span layoutId="scene-nav-pill" className="scene-nav-pill" />}
+                  <span className="relative z-[1]">{section.label}</span>
+                </a>
+              ))}
+            </nav>
+            <div className="flex items-center gap-2">
+              <div className="hidden rounded-full border border-white/12 bg-white/5 px-3 py-1 text-[0.6rem] uppercase tracking-[0.16em] text-[#f8eddc]/68 lg:block">
+                {activePalette.cue}
+              </div>
               <button
                 type="button"
                 onClick={() => setImmersiveMode((prev) => !prev)}
+                data-cursor="FX"
                 className={[
                   "rounded-full border px-2.5 py-1 text-[0.6rem] tracking-[0.14em] transition",
                   immersiveMode
@@ -1639,19 +2324,15 @@ export default function Home() {
               >
                 {immersiveMode ? "IMMERSIVE FX ON" : "IMMERSIVE FX OFF"}
               </button>
-            </nav>
-            <button
-              type="button"
-              onClick={() => setImmersiveMode((prev) => !prev)}
-              className={[
-                "rounded-full border px-2 py-1 text-[0.55rem] tracking-[0.12em] sm:hidden",
-                immersiveMode
-                  ? "border-amber-200/35 bg-amber-300/10 text-amber-100"
-                  : "border-white/20 bg-white/5 text-[#f8eddc]/70",
-              ].join(" ")}
-            >
-              {immersiveMode ? "FX ON" : "FX OFF"}
-            </button>
+            </div>
+          </div>
+          <div className="mx-auto mt-3 flex max-w-6xl items-center justify-between gap-3 px-1 md:hidden">
+            <div className="rounded-full border border-white/12 bg-black/28 px-3 py-1 text-[0.58rem] uppercase tracking-[0.18em] text-[#f8eddc]/66 backdrop-blur-xl">
+              {storySections.find((section) => section.id === activeScene)?.label ?? "Opening"}
+            </div>
+            <div className="rounded-full border border-white/12 bg-black/28 px-3 py-1 text-[0.58rem] uppercase tracking-[0.18em] text-[#f8eddc]/66 backdrop-blur-xl">
+              Scroll-linked chapters
+            </div>
           </div>
         </header>
 
@@ -1713,17 +2394,41 @@ export default function Home() {
                   />
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <a href="#projects" className="inline-flex items-center gap-2 rounded-full bg-[#fbbf24] px-6 py-3 text-sm font-semibold text-[#1a1207] transition hover:scale-[1.03]">
-                    Explore Projects <ArrowRight className="h-4 w-4" />
-                  </a>
-                  <a href="/cv" className="inline-flex items-center gap-2 rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-[#fff5e7] transition hover:bg-white/10">
-                    Open CV
-                  </a>
+                  <Magnetic>
+                    <motion.a
+                      href="#projects"
+                      data-cursor="Explore"
+                      whileTap={{ scale: 0.97 }}
+                      className="inline-flex items-center gap-2 rounded-full bg-[#fbbf24] px-6 py-3 text-sm font-semibold text-[#1a1207] shadow-[0_14px_30px_rgba(251,191,36,.2)] transition hover:scale-[1.03]"
+                    >
+                      Explore Projects <ArrowRight className="h-4 w-4" />
+                    </motion.a>
+                  </Magnetic>
+                  <Magnetic>
+                    <motion.a
+                      href="#contact"
+                      data-cursor="Contact"
+                      whileTap={{ scale: 0.97 }}
+                      className="inline-flex items-center gap-2 rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-[#fff5e7] transition hover:bg-white/10"
+                    >
+                      Start A Project
+                    </motion.a>
+                  </Magnetic>
+                  <Magnetic>
+                    <motion.a
+                      href="/cv"
+                      data-cursor="CV"
+                      whileTap={{ scale: 0.97 }}
+                      className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-black/20 px-6 py-3 text-sm font-semibold text-[#fff5e7] transition hover:border-white/30 hover:bg-white/10"
+                    >
+                      Open CV
+                    </motion.a>
+                  </Magnetic>
                 </div>
                 <div className="studio-intro-strip mt-6 flex flex-wrap gap-2">
                   <span className="studio-intro-pill">Scene-driven storytelling</span>
                   <span className="studio-intro-pill">Interaction-first motion</span>
-                  <span className="studio-intro-pill">Manual cinematic audio cues</span>
+                  <span className="studio-intro-pill">Project modal + featured slider</span>
                 </div>
               </div>
               <motion.div
@@ -1743,9 +2448,11 @@ export default function Home() {
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_35%,rgba(0,0,0,.78)_100%)]" />
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-                  {stats.map((item) => (
+                  {heroStats.map((item) => (
                     <div key={item.label} className="rounded-xl border border-white/15 bg-black/25 px-2 py-3">
-                      <p className="font-cinema-display text-xl text-[#ffe7b0]">{item.value}</p>
+                      <p className="font-cinema-display text-xl text-[#ffe7b0]">
+                        <CountUpNumber value={item.value} suffix={item.suffix} />
+                      </p>
                       <p className="text-[0.66rem] uppercase tracking-[0.14em] text-[#f9e9d3]/70">{item.label}</p>
                     </div>
                   ))}
@@ -1810,12 +2517,44 @@ export default function Home() {
         <motion.section
           id="skills"
           data-scene-id="skills"
-          className="scene-camera-stage scene-depth-skills relative z-10 overflow-hidden py-10"
+          className="scene-camera-stage scene-depth-skills relative z-10 overflow-hidden px-6 py-16 md:px-10 lg:px-16"
           style={skillsCameraStyle}
         >
-          <div className="cinema-marquee">
-            <div className="cinema-marquee-track">
-              {[...reelSkills, ...reelSkills].map((skill, idx) => <span key={`${skill}-${idx}`} className="cinema-chip">{skill}</span>)}
+          <div className="mx-auto max-w-6xl">
+            <div className="cinema-marquee">
+              <div className="cinema-marquee-track">
+                {[...reelSkills, ...reelSkills].map((skill, idx) => <span key={`${skill}-${idx}`} className="cinema-chip">{skill}</span>)}
+              </div>
+            </div>
+            <div className="mt-12 grid gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
+              <div>
+                <p className="text-xs uppercase tracking-[0.22em] text-[#38bdf8]">Skill Spectrum</p>
+                <h2 className="font-cinema-display mt-3 text-4xl text-[#fff4df] md:text-6xl">
+                  <WordReveal text="Systems Behind The Atmosphere" />
+                </h2>
+                <p className="mt-5 max-w-xl text-sm leading-relaxed text-[#f8eddc]/74 md:text-base">
+                  Design language, engineering discipline, and data fluency work together here. The goal is not motion for its own sake. It is motion that clarifies, guides, and persuades.
+                </p>
+                <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                  <div className="skill-stat-card">
+                    <CountUpNumber value={reelSkills.length} className="font-cinema-display text-3xl text-[#fff4e0]" />
+                    <p className="mt-2 text-[0.64rem] uppercase tracking-[0.16em] text-[#f8eddc]/64">Core tools</p>
+                  </div>
+                  <div className="skill-stat-card">
+                    <CountUpNumber value={skillBands.length} className="font-cinema-display text-3xl text-[#fff4e0]" />
+                    <p className="mt-2 text-[0.64rem] uppercase tracking-[0.16em] text-[#f8eddc]/64">Delivery pillars</p>
+                  </div>
+                  <div className="skill-stat-card">
+                    <CountUpNumber value={3} className="font-cinema-display text-3xl text-[#fff4e0]" />
+                    <p className="mt-2 text-[0.64rem] uppercase tracking-[0.16em] text-[#f8eddc]/64">Disciplines fused</p>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-4">
+                {skillBands.map((band, index) => (
+                  <SkillBandMeter key={band.name} band={band} index={index} />
+                ))}
+              </div>
             </div>
           </div>
         </motion.section>
@@ -1837,6 +2576,28 @@ export default function Home() {
               </p>
             </div>
 
+            <FeaturedProjectSlider
+              activeIndex={featuredProjectIndex}
+              immersiveMode={immersiveMode}
+              onChange={(index) => {
+                setFeaturedProjectIndex(index);
+                setHoveredProjectIndex(null);
+              }}
+              onOpenDetails={(index) => {
+                setFeaturedProjectIndex(index);
+                setModalProjectIndex(index);
+              }}
+            />
+
+            <div className="mb-8 mt-14 flex items-end justify-between gap-6">
+              <div>
+                <p className="text-xs uppercase tracking-[0.22em] text-[#f8eddc]/58">Project Archive</p>
+                <h3 className="font-cinema-display mt-2 text-2xl text-[#fff4df] md:text-4xl">Interactive Project Grid</h3>
+              </div>
+              <p className="hidden max-w-sm text-right text-sm leading-relaxed text-[#f8eddc]/62 md:block">
+                Hover for 3D tilt and atmosphere changes. Pin a card into the featured reel or open the full modal scene.
+              </p>
+            </div>
             <div className="grid gap-7 md:grid-cols-2">
               {projects.map((project, idx) => (
                 <ProjectReelCard
@@ -1845,9 +2606,17 @@ export default function Home() {
                   idx={idx}
                   immersiveMode={immersiveMode}
                   reducedMotion={Boolean(reducedMotion)}
-                  isActive={activeProjectIndex === idx}
-                  onActivate={() => setActiveProjectIndex(idx)}
-                  onDeactivate={() => setActiveProjectIndex((current) => (current === idx ? null : current))}
+                  isActive={focusedProjectIndex === idx}
+                  onActivate={() => setHoveredProjectIndex(idx)}
+                  onDeactivate={() => setHoveredProjectIndex((current) => (current === idx ? null : current))}
+                  onFocusProject={() => {
+                    setFeaturedProjectIndex(idx);
+                    setHoveredProjectIndex(idx);
+                  }}
+                  onOpenDetails={() => {
+                    setFeaturedProjectIndex(idx);
+                    setModalProjectIndex(idx);
+                  }}
                 />
               ))}
             </div>
@@ -1870,27 +2639,13 @@ export default function Home() {
           >
             <p className="text-xs uppercase tracking-[0.22em] text-[#38bdf8]">Final Scene</p>
             <h2 className="font-cinema-display mt-3 text-4xl leading-tight text-[#fff4df] md:text-6xl">
-              <WordReveal text="Let us craft a portfolio experience people remember." />
+              <WordReveal text="Let us build something cinematic, sharp, and useful." />
             </h2>
             <p className="mt-4 max-w-3xl text-sm leading-relaxed text-[#f8eddc]/78 md:text-base">
-              Open for internship and collaboration in analytics, product engineering, and creative web development.
+              Open for internship and collaboration in analytics, product engineering, and creative web development. The contact flow below keeps the interaction polished while staying practical.
             </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a
-                href="mailto:raja.pranata@binus.ac.id"
-                className="inline-flex items-center gap-2 rounded-full bg-[#38bdf8] px-6 py-3 text-sm font-semibold text-[#091520] transition hover:scale-[1.03]"
-              >
-                <Mail className="h-4 w-4" />
-                raja.pranata@binus.ac.id
-              </a>
-              <a
-                href="https://wa.me/6285694890848"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-white/30 px-6 py-3 text-sm font-semibold text-[#fff4df] transition hover:bg-white/10"
-              >
-                WhatsApp <ArrowRight className="h-4 w-4" />
-              </a>
+            <div className="mt-10">
+              <ContactConsole />
             </div>
           </motion.div>
         </motion.section>
