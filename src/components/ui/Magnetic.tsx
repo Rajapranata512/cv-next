@@ -7,11 +7,12 @@ export const Magnetic = ({ children }: { children: React.ReactNode }) => {
     const [position, setPosition] = useState({ x: 0, y: 0 });
 
     const handleMouseMove = (e: React.MouseEvent) => {
+        if (!ref.current) return;
         const { clientX, clientY } = e;
-        const { left, top, width, height } = ref.current!.getBoundingClientRect();
+        const { left, top, width, height } = ref.current.getBoundingClientRect();
         const middleX = clientX - (left + width / 2);
         const middleY = clientY - (top + height / 2);
-        setPosition({ x: middleX * 0.3, y: middleY * 0.3 });
+        setPosition({ x: middleX * 0.12, y: middleY * 0.12 });
     };
 
     const handleMouseLeave = () => {
@@ -26,7 +27,7 @@ export const Magnetic = ({ children }: { children: React.ReactNode }) => {
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             animate={{ x, y }}
-            transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
+            transition={{ type: "spring", stiffness: 180, damping: 22, mass: 0.2 }}
         >
             {children}
         </motion.div>

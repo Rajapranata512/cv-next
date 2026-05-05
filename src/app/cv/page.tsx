@@ -73,71 +73,9 @@ export default function CVPage() {
       )}
     >
       {/* =========================
-          SCREEN HEADER (HIDE ON PRINT)
+          PROFILE HEADER
          ========================= */}
-      <section className={cls(CARD, PAD, "mb-5 no-print")}>
-        <div className="flex flex-wrap items-start gap-5">
-          <Image
-            src="/avatar.jpg"
-            width={92}
-            height={92}
-            alt="Profile photo"
-            className="rounded-2xl object-cover"
-          />
-
-          <div className="min-w-[18rem]">
-            <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-slate-900">
-              {PROFILE.name}
-            </h1>
-            <p className={cls("text-sm", MUTED)}>{PROFILE.title}</p>
-
-            <div className="mt-2 flex flex-wrap items-center gap-y-2 text-sm">
-              <a className={A} href={`mailto:${PROFILE.email}`}>
-                {PROFILE.email}
-              </a>
-              <BadgeSep />
-              <a className={A} href={`tel:${PROFILE.phoneE164}`}>
-                {PROFILE.phoneDisplay}
-              </a>
-              <BadgeSep />
-              <a className={A} href={WA_LINK} target="_blank" rel="noreferrer">
-                wa.me/{PROFILE.waNumber}
-              </a>
-              <BadgeSep />
-              <a className={A} href={PROFILE.githubUrl} target="_blank" rel="noreferrer">
-                {PROFILE.githubLabel}
-              </a>
-              <BadgeSep />
-              <a className={A} href={PROFILE.linkedinUrl} target="_blank" rel="noreferrer">
-                {PROFILE.linkedinLabel}
-              </a>
-              <BadgeSep />
-              <a className={A} href={PROFILE.portfolioUrl} target="_blank" rel="noreferrer">
-                {PROFILE.portfolioLabel}
-              </a>
-              <BadgeSep />
-              {/* Sertifikat clickable juga di screen */}
-              <a className={A} href={CERT_EN.path} target="_blank" rel="noreferrer">
-                {CERT_EN.label}
-              </a>
-            </div>
-          </div>
-
-          <div className="ms-auto flex gap-3">
-            <a className="btn" href="#contact">
-              Contact
-            </a>
-            <button type="button" className="btn" onClick={() => window.print()}>
-              Print to PDF
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* =========================
-          PRINT HEADER (ONLY FOR PDF)
-         ========================= */}
-      <section className={cls(CARD, "print-only mb-3 p-3")}>
+      <section className={cls(CARD, "mb-3 p-3")}>
         <div className="flex items-start gap-3">
           <Image
             src="/avatar.jpg"
@@ -156,7 +94,19 @@ export default function CVPage() {
                 <p className={cls("text-[10px] leading-snug", MUTED)}>{PROFILE.title}</p>
               </div>
 
-              <div className={cls("text-[10px]", MUTED, "text-right")}>Jakarta, Indonesia</div>
+              <div className="flex shrink-0 flex-col items-end gap-2">
+                <div className={cls("text-[10px]", MUTED, "text-right")}>Jakarta, Indonesia</div>
+                <button
+                  type="button"
+                  className={cls(
+                    "no-print rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700",
+                    "transition hover:bg-slate-50 hover:text-slate-950 print:hidden"
+                  )}
+                  onClick={() => window.print()}
+                >
+                  Print to PDF
+                </button>
+              </div>
             </div>
 
             <div className={cls("mt-1 text-[10px] leading-snug", BODY)}>

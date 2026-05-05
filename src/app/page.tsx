@@ -2144,35 +2144,28 @@ export default function Home() {
   const contactCamScale = useSpring(useTransform(scrollYProgress, [0.78, 0.94], [0.965, 1]), cameraSpring);
   const contactCamTilt = useSpring(useTransform(scrollYProgress, [0.78, 0.96], [1.8, 0]), cameraSpring);
 
-  const [preloading, setPreloading] = useState(true);
+  const [preloading, setPreloading] = useState(false);
   const [activeScene, setActiveScene] = useState<SceneId>("intro");
   const [cutToken, setCutToken] = useState(0);
   const [featuredProjectIndex, setFeaturedProjectIndex] = useState(0);
   const [hoveredProjectIndex, setHoveredProjectIndex] = useState<number | null>(null);
   const [modalProjectIndex, setModalProjectIndex] = useState<number | null>(null);
-  const [immersiveMode, setImmersiveMode] = useState<boolean>(() => {
-    if (typeof window === "undefined") return true;
-    try {
-      return window.localStorage.getItem("cinema-immersive") !== "off";
-    } catch {
-      return true;
-    }
-  });
+  const immersiveMode = false;
   const finishPreloader = useCallback(() => setPreloading((p) => (p ? false : p)), []);
   const focusedProjectIndex = modalProjectIndex ?? hoveredProjectIndex ?? featuredProjectIndex;
-  const activeProject = immersiveMode ? (projects[focusedProjectIndex] ?? null) : null;
+  const activeProject = projects[focusedProjectIndex] ?? null;
   const modalProject = modalProjectIndex !== null ? (projects[modalProjectIndex] ?? null) : null;
   const activePalette = scenePalettes[activeScene];
   const accentColor = activeProject?.mood.accent ?? activePalette.accent;
   const secondaryColor = activeProject?.mood.icon ?? activePalette.secondary;
   const progressGradient = `linear-gradient(90deg, ${colorWithAlpha(activePalette.primary, 0.95)}, ${colorWithAlpha(accentColor, 0.95)}, ${colorWithAlpha(secondaryColor, 0.95)})`;
-  const cameraEnabled = immersiveMode && quality === "high" && !reducedMotion;
+  const cameraEnabled = quality !== "low" && !reducedMotion;
   const rootStyle = {
     "--scene-accent": accentColor,
     "--scene-accent-soft": colorWithAlpha(accentColor, 0.24),
     "--scene-secondary": secondaryColor,
   } as CSSProperties;
-  const heroShellStyle = immersiveMode && !reducedMotion
+  const heroShellStyle = !reducedMotion
     ? { y: heroY, opacity: heroOpacity, scale: heroScale, rotateX: heroTilt }
     : { y: heroY, opacity: heroOpacity };
   const introCameraStyle = cameraEnabled ? { y: introCamY, scale: introCamScale, rotateX: introCamTilt } : undefined;
@@ -2180,14 +2173,6 @@ export default function Home() {
   const skillsCameraStyle = cameraEnabled ? { y: skillsCamY, scale: skillsCamScale, rotateX: skillsCamTilt } : undefined;
   const projectsCameraStyle = cameraEnabled ? { y: projectsCamY, scale: projectsCamScale, rotateX: projectsCamTilt } : undefined;
   const contactCameraStyle = cameraEnabled ? { y: contactCamY, scale: contactCamScale, rotateX: contactCamTilt } : undefined;
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem("cinema-immersive", immersiveMode ? "on" : "off");
-    } catch {
-      // no-op
-    }
-  }, [immersiveMode]);
 
   useEffect(() => {
     activeSceneRef.current = activeScene;
@@ -2307,23 +2292,8 @@ export default function Home() {
                 </a>
               ))}
             </nav>
-            <div className="flex items-center gap-2">
-              <div className="hidden rounded-full border border-white/12 bg-white/5 px-3 py-1 text-[0.6rem] uppercase tracking-[0.16em] text-[#f8eddc]/68 lg:block">
-                {activePalette.cue}
-              </div>
-              <button
-                type="button"
-                onClick={() => setImmersiveMode((prev) => !prev)}
-                data-cursor="FX"
-                className={[
-                  "rounded-full border px-2.5 py-1 text-[0.6rem] tracking-[0.14em] transition",
-                  immersiveMode
-                    ? "border-amber-200/35 bg-amber-300/10 text-amber-100"
-                    : "border-white/20 bg-white/5 text-[#f8eddc]/70 hover:bg-white/10",
-                ].join(" ")}
-              >
-                {immersiveMode ? "IMMERSIVE FX ON" : "IMMERSIVE FX OFF"}
-              </button>
+            <div className="hidden rounded-full border border-white/12 bg-white/5 px-3 py-1 text-[0.6rem] uppercase tracking-[0.16em] text-[#f8eddc]/68 lg:block">
+              Smooth motion / low-noise UI
             </div>
           </div>
           <div className="mx-auto mt-3 flex max-w-6xl items-center justify-between gap-3 px-1 md:hidden">
@@ -2331,7 +2301,7 @@ export default function Home() {
               {storySections.find((section) => section.id === activeScene)?.label ?? "Opening"}
             </div>
             <div className="rounded-full border border-white/12 bg-black/28 px-3 py-1 text-[0.58rem] uppercase tracking-[0.18em] text-[#f8eddc]/66 backdrop-blur-xl">
-              Scroll-linked chapters
+              Smooth scroll motion
             </div>
           </div>
         </header>
@@ -2377,7 +2347,7 @@ export default function Home() {
             </div>
             <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-200/30 bg-amber-300/10 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-amber-200">
               <Sparkles className="h-3.5 w-3.5" />
-              Cinematic Portfolio Experience
+              Smooth Portfolio Experience
             </p>
             <div className="grid items-end gap-10 lg:grid-cols-[1.2fr_0.8fr]">
               <div>
@@ -2426,9 +2396,9 @@ export default function Home() {
                   </Magnetic>
                 </div>
                 <div className="studio-intro-strip mt-6 flex flex-wrap gap-2">
-                  <span className="studio-intro-pill">Scene-driven storytelling</span>
-                  <span className="studio-intro-pill">Interaction-first motion</span>
-                  <span className="studio-intro-pill">Project modal + featured slider</span>
+                  <span className="studio-intro-pill">Subtle scroll reveals</span>
+                  <span className="studio-intro-pill">Responsive interactions</span>
+                  <span className="studio-intro-pill">Fast and accessible</span>
                 </div>
               </div>
               <motion.div
