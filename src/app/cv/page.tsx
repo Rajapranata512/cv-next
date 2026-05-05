@@ -328,6 +328,23 @@ export default function CVPage() {
 
           <article className="avoid-break mb-3 print:mb-2">
             <div className="flex items-baseline justify-between gap-3">
+              <h3 className="font-semibold text-slate-900">IDX Trading Lab</h3>
+              <span className={cls("text-sm print:text-[10px]", MUTED)}>2026</span>
+            </div>
+            <ul className="mt-1 list-disc ps-5 space-y-1 print:space-y-0.5">
+              <li className={LI}>Trading-focused web lab for exploring Indonesian market data and analysis workflows.</li>
+              <li className={LI}>Stack: modern web UI, data-oriented interface, Vercel deployment.</li>
+              <li className={LI}>
+                Live:&nbsp;
+                <a className={A} href="https://idx-trading-lab.vercel.app/" target="_blank" rel="noreferrer">
+                  idx-trading-lab.vercel.app
+                </a>
+              </li>
+            </ul>
+          </article>
+
+          <article className="avoid-break mb-3 print:mb-2">
+            <div className="flex items-baseline justify-between gap-3">
               <h3 className="font-semibold text-slate-900">Kripuk.com</h3>
               <span className={cls("text-sm print:text-[10px]", MUTED)}>2025</span>
             </div>
