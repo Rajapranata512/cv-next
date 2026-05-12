@@ -34,6 +34,7 @@ import {
   ExternalLink,
   Film,
   Github,
+  Globe2,
   Linkedin,
   Mail,
   MessageCircleMore,
@@ -123,6 +124,43 @@ const chapters: Chapter[] = [
 ];
 
 const projects: Project[] = [
+  {
+    title: "Asosiasi Alumni DRM",
+    description: "Laravel alumni association platform with member flows, content management, analytics, and cPanel deployment.",
+    link: "https://asosiasidrm.id/",
+    image: "https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop",
+    tags: ["Laravel 12", "Filament", "Livewire", "cPanel", "GitHub Actions"],
+    icon: Globe2,
+    year: "2026",
+    role: "Full-stack deployment and optimization",
+    spotlight: "A production-oriented alumni association website for DRM BINUS, combining public information pages, authenticated alumni features, admin operations, and shared-hosting deployment constraints.",
+    metrics: ["Filament admin", "Alumni + event flows", "cPanel deployment"],
+    narrative: [
+      "Worked across the Laravel stack to support public pages, alumni authentication, profile flows, event registration, articles, donations, and document access.",
+      "Used Filament resources and analytics widgets to make content, alumni data, donations, events, and traffic easier to manage from the admin side.",
+      "Prepared the project for cPanel hosting with public_html/core separation, storage handling, cron-based optimization, queue scheduling, and GitHub Actions deployment notes.",
+    ],
+    mood: {
+      tone: "executive",
+      aura: ["rgba(20, 184, 166, 0.3)", "rgba(59, 130, 246, 0.24)"],
+      sheen: "rgba(191, 219, 254, 0.48)",
+      overlay: ["rgba(0, 0, 0, 0.05)", "rgba(6, 32, 42, 0.82)"],
+      accent: "#14b8a6",
+      icon: "#67e8f9",
+      chipBg: "rgba(20, 184, 166, 0.14)",
+      chipBorder: "rgba(45, 212, 191, 0.34)",
+      auraSpeed: 8.6,
+      hover: { y: -8, rotateX: 2.6, rotateY: -2.5, scale: 1.014 },
+    },
+    cue: {
+      name: "Institution Pulse",
+      motif: [185, 233, 294, 370],
+      waveform: "triangle",
+      pan: [-0.16, 0.22],
+      glide: 1.05,
+      q: 1.16,
+    },
+  },
   {
     title: "Foodies",
     description: "Laravel recipe platform with auth flow, CRUD recipes, and responsive detail pages.",
@@ -310,9 +348,9 @@ const projects: Project[] = [
   },
 ];
 
-const reelSkills = ["TypeScript", "Next.js", "Laravel", "Python", "R", "SQL", "Tableau", "Figma", "Tailwind CSS"];
+const reelSkills = ["TypeScript", "Next.js", "Laravel", "Filament", "Livewire", "Python", "R", "SQL", "Tableau", "Figma", "Tailwind CSS"];
 const heroStats: HeroStat[] = [
-  { label: "Projects Built", value: 12, suffix: "+" },
+  { label: "Projects Built", value: 13, suffix: "+" },
   { label: "Research Works", value: 3 },
   { label: "Dashboard Cases", value: 20, suffix: "+" },
 ];
