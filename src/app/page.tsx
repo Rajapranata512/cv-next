@@ -886,13 +886,22 @@ function ProjectReelCard({
       {immersiveMode && <div className="project-card-aura" aria-hidden />}
       {immersiveMode && <div className="project-card-sheen" aria-hidden />}
       {immersiveMode && <motion.div className="project-card-spotlight" style={{ opacity: spotlightOpacity, backgroundImage: spotlightGradient }} aria-hidden />}
-      <div className="relative aspect-[16/10] overflow-hidden">
+      <button
+        type="button"
+        onClick={onOpenDetails}
+        data-cursor="Details"
+        className="group/media relative block aspect-[16/10] w-full overflow-hidden text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--project-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12]"
+        aria-label={`Open ${project.title} project details`}
+      >
         <Image src={project.image} alt={`${project.title} preview`} fill className="object-cover transition duration-700 group-hover:scale-110" />
         <div className="project-card-overlay absolute inset-0" />
         <div className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-black/35">
           <Icon className="h-5 w-5" style={{ color: "var(--project-icon)" }} />
         </div>
-      </div>
+        <span className="absolute bottom-4 right-4 rounded-full border border-white/20 bg-black/45 px-3 py-2 text-[0.66rem] font-semibold uppercase tracking-[0.14em] text-[#fff4dd] opacity-95 backdrop-blur-md transition group-hover/media:border-white/35 group-hover/media:bg-black/60">
+          View details
+        </span>
+      </button>
       <div className="space-y-4 p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -905,10 +914,11 @@ function ProjectReelCard({
             href={project.link}
             target="_blank"
             rel="noreferrer"
-            className="project-card-visit inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/25 text-[#f8ead4] transition"
+            data-cursor="Visit"
+            className="project-card-visit inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-full border border-white/20 bg-black/25 px-4 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#f8ead4] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--project-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12]"
             aria-label={`Visit ${project.title}`}
           >
-            <ExternalLink className="h-4 w-4" />
+            Visit live <ExternalLink className="h-3.5 w-3.5" />
           </a>
         </div>
         <p className="text-sm leading-relaxed text-[#f8eddc]/80">{project.description}</p>
@@ -924,17 +934,17 @@ function ProjectReelCard({
             type="button"
             onClick={onFocusProject}
             data-cursor="Focus"
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/[0.06] px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#fff4dd] transition hover:border-white/35 hover:bg-white/10"
+            className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-white/20 bg-white/[0.06] px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#fff4dd] transition hover:border-white/35 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--project-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12] sm:flex-none"
           >
-            Focus Reel <ChevronRight className="h-3.5 w-3.5" />
+            Feature <ChevronRight className="h-3.5 w-3.5" />
           </button>
           <button
             type="button"
             onClick={onOpenDetails}
             data-cursor="Inspect"
-            className="inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-[0.72rem] uppercase tracking-[0.16em] text-[#f8eddc]/72 transition hover:border-[var(--project-accent-soft)] hover:text-white"
+            className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-white/15 px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#f8eddc]/82 transition hover:border-[var(--project-accent-soft)] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--project-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12] sm:flex-none"
           >
-            Open Scene
+            Details
           </button>
         </div>
       </div>
@@ -974,9 +984,13 @@ function FeaturedProjectSlider({
       <div className="grid gap-6 lg:grid-cols-[1.12fr_0.88fr] lg:items-stretch">
         <div className="relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-black/30">
           <AnimatePresence mode="wait">
-            <motion.div
+            <motion.button
               key={project.title}
-              className="group/feature relative aspect-[16/11] overflow-hidden"
+              type="button"
+              onClick={() => onOpenDetails(activeIndex)}
+              data-cursor="Details"
+              className="group/feature relative block aspect-[16/11] w-full overflow-hidden text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--featured-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12]"
+              aria-label={`Open ${project.title} project details`}
               initial={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.04 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.98 }}
@@ -999,16 +1013,11 @@ function FeaturedProjectSlider({
                   <p className="text-[0.62rem] uppercase tracking-[0.2em] text-[#f8eddc]/70">{project.year} / {project.role}</p>
                   <h3 className="font-cinema-display mt-2 text-3xl text-[#fff6e7] md:text-4xl">{project.title}</h3>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => onOpenDetails(activeIndex)}
-                  data-cursor="Details"
-                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/35 px-4 py-2 text-[0.72rem] uppercase tracking-[0.16em] text-[#fff4de] backdrop-blur-md transition hover:border-white/35 hover:bg-black/52"
-                >
-                  Open Details <ArrowRight className="h-3.5 w-3.5" />
-                </button>
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/35 px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#fff4de] backdrop-blur-md transition group-hover/feature:border-white/35 group-hover/feature:bg-black/52">
+                  View details <ArrowRight className="h-3.5 w-3.5" />
+                </span>
               </div>
-            </motion.div>
+            </motion.button>
           </AnimatePresence>
         </div>
 
@@ -1034,6 +1043,29 @@ function FeaturedProjectSlider({
                   {tag}
                 </span>
               ))}
+            </div>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Magnetic>
+                <button
+                  type="button"
+                  onClick={() => onOpenDetails(activeIndex)}
+                  data-cursor="Details"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[#091018] transition hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--featured-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12]"
+                >
+                  View details <ArrowRight className="h-4 w-4" />
+                </button>
+              </Magnetic>
+              <Magnetic>
+                <a
+                  href={project.link}
+                  target="_blank"
+                  rel="noreferrer"
+                  data-cursor="Visit"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/18 px-5 py-2.5 text-sm font-semibold text-[#fff3dc] transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--featured-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12]"
+                >
+                  Visit live <ExternalLink className="h-4 w-4" />
+                </a>
+              </Magnetic>
             </div>
           </div>
 
