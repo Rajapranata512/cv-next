@@ -39,10 +39,12 @@ const CARD =
   "print:rounded-none print:border-0 print:bg-transparent print:shadow-none";
 
 const PAD = "p-5 print:p-0";
-const H2 = "text-[15px] font-bold text-slate-900 print:text-[9.5px] print:leading-tight";
+const H2 =
+  "text-[15px] font-extrabold uppercase tracking-[0.04em] text-slate-900 " +
+  "print:text-[10.4px] print:leading-tight print:tracking-[0.035em]";
 const MUTED = "text-slate-600 print:text-slate-700";
 const BODY = "text-slate-900";
-const LI = "leading-snug print:leading-[1.22]";
+const LI = "leading-snug print:leading-[1.28]";
 const A =
   "underline decoration-slate-300 underline-offset-2 hover:decoration-slate-500 print:no-underline print:text-slate-800";
 
@@ -52,7 +54,7 @@ function BadgeSep() {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mb-2 flex items-center justify-between print:mb-1 print:border-b print:border-slate-300 print:pb-0.5">
+    <div className="mb-2 flex items-center justify-between print:mb-1.5 print:border-b print:border-slate-400 print:pb-[1.5px]">
       <h2 className={H2}>{children}</h2>
     </div>
   );
@@ -65,33 +67,33 @@ export default function CVPage() {
         "cv-print-root mx-auto max-w-[860px] px-6 py-8",
         "text-[14px] leading-relaxed",
         "print:m-0 print:w-full print:max-w-none print:px-0 print:py-0",
-        "print:text-[9.5px] print:leading-[1.22] print:text-black"
+        "print:text-[10.2px] print:leading-[1.26] print:text-black"
       )}
     >
       {/* =========================
           PROFILE HEADER
          ========================= */}
-      <section className={cls(CARD, "mb-3 p-3 print:mb-3 print:border-b print:border-slate-300 print:p-0 print:pb-2")}>
-        <div className="flex items-start gap-3 print:gap-2.5">
+      <section className={cls(CARD, "mb-3 p-3 print:mb-3 print:border-b print:border-slate-300 print:p-0 print:pb-2.5")}>
+        <div className="flex items-start gap-3 print:gap-3">
           <Image
             src="/avatar.jpg"
-            width={72}
-            height={72}
+            width={80}
+            height={80}
             alt="Profile photo"
-            className="h-16 w-16 rounded-xl object-cover print:h-16 print:w-16 print:rounded-md"
+            className="h-[72px] w-[72px] rounded-xl object-cover print:h-[72px] print:w-[72px] print:rounded-md"
           />
 
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h1 className="text-[15px] font-extrabold leading-tight text-slate-900 print:text-[14px]">
+                <h1 className="text-[16px] font-extrabold leading-tight text-slate-900 print:text-[15px]">
                   {PROFILE.name}
                 </h1>
-                <p className={cls("text-[10px] leading-snug print:text-[9px]", MUTED)}>{PROFILE.title}</p>
+                <p className={cls("text-[10.5px] leading-snug print:text-[9.4px]", MUTED)}>{PROFILE.title}</p>
               </div>
 
               <div className="flex shrink-0 flex-col items-end gap-2">
-                <div className={cls("text-[10px] print:text-[8.5px]", MUTED, "text-right")}>Jakarta, Indonesia</div>
+                <div className={cls("text-[10px] print:text-[9px]", MUTED, "text-right")}>Jakarta, Indonesia</div>
                 <button
                   type="button"
                   className={cls(
@@ -105,7 +107,7 @@ export default function CVPage() {
               </div>
             </div>
 
-            <div className={cls("mt-1 text-[10px] leading-snug print:mt-1 print:text-[8.5px]", BODY)}>
+            <div className={cls("mt-1.5 text-[10px] leading-snug print:mt-1 print:text-[9px] print:leading-[1.18]", BODY)}>
               <div className="flex flex-wrap items-center">
                 <span className="font-semibold">Email:</span>&nbsp;
                 <a className={A} href={`mailto:${PROFILE.email}`}>
@@ -179,7 +181,7 @@ export default function CVPage() {
           <div className={BODY}>
             <p className="font-semibold">BINUS University</p>
             <p>Computer Science &amp; Statistics</p>
-            <p className={cls("text-sm print:text-[8.5px]", MUTED)}>2022 - Present</p>
+            <p className={cls("text-sm print:text-[9.2px]", MUTED)}>2022 - Present</p>
           </div>
         </section>
 
@@ -188,7 +190,7 @@ export default function CVPage() {
           <div className={BODY}>
             <div className="flex items-baseline justify-between gap-3">
               <p className="font-semibold">HIMSTAT (Statistics Student Association)</p>
-              <p className={cls("text-sm whitespace-nowrap print:text-[8.5px]", MUTED)}>2022 - 2023</p>
+              <p className={cls("text-sm whitespace-nowrap print:text-[9.2px]", MUTED)}>2022 - 2023</p>
             </div>
             <ul className="mt-2 list-disc ps-5 space-y-1 print:mt-1 print:space-y-0.5">
               <li className={LI}>Event Lead for Community Service (P2M) in 2022.</li>
@@ -216,7 +218,7 @@ export default function CVPage() {
             <div className="flex items-baseline justify-between gap-3">
               <p className="font-semibold">Beelingua English Certificate</p>
               <a
-                className={cls(A, "shrink-0 text-sm print:text-[8.5px]")}
+                className={cls(A, "shrink-0 text-sm print:text-[9.2px]")}
                 href={CERT_EN.path}
                 target="_blank"
                 rel="noreferrer"
@@ -224,7 +226,7 @@ export default function CVPage() {
                 PDF
               </a>
             </div>
-            <p className={cls("mt-1 text-sm print:mt-0.5 print:text-[8.5px]", MUTED)}>
+            <p className={cls("mt-1 text-sm print:mt-0.5 print:text-[9.2px]", MUTED)}>
               English language proficiency certificate.
             </p>
           </div>
@@ -241,13 +243,13 @@ export default function CVPage() {
           <article className="avoid-break mb-3 print:mb-2">
             <div className="flex items-baseline justify-between gap-3">
               <h3 className="font-semibold leading-tight text-slate-900">Asosiasi Alumni DRM BINUS Website</h3>
-              <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2026</span>
+              <span className={cls("text-sm print:text-[9.2px]", MUTED)}>2026</span>
             </div>
             <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
-              <li className={LI}>Laravel 12 platform for alumni content, profiles, events, articles, donations, documents, and analytics.</li>
-              <li className={LI}>Built admin workflows with Filament, authenticated alumni features, upload flows, and visitor analytics.</li>
+              <li className={LI}>Built a Laravel 12 alumni platform for profiles, events, articles, donations, documents, and analytics.</li>
+              <li className={LI}>Developed Filament admin workflows, alumni authentication, upload flows, and visitor analytics.</li>
               <li className={LI}>
-                Deployed through cPanel/public_html setup, Vite assets, storage handling, cron optimization, and GitHub Actions.
+                Deployed to cPanel with public_html setup, Vite assets, storage, cron optimization, and GitHub Actions.
               </li>
               <li className={LI}>
                 Site:&nbsp;
@@ -261,11 +263,11 @@ export default function CVPage() {
           <article className="avoid-break mb-3 print:mb-2">
             <div className="flex items-baseline justify-between gap-3">
               <h3 className="font-semibold leading-tight text-slate-900">IDX Trading Lab</h3>
-              <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2026</span>
+              <span className={cls("text-sm print:text-[9.2px]", MUTED)}>2026</span>
             </div>
             <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
-              <li className={LI}>Trading-focused web lab for exploring Indonesian market data and analysis workflows.</li>
-              <li className={LI}>Designed scan-friendly data UI for market review and deployed the app on Vercel.</li>
+              <li className={LI}>Built a trading web lab for Indonesian market exploration and analysis workflows.</li>
+              <li className={LI}>Designed scan-friendly data UI for market review and Vercel deployment.</li>
               <li className={LI}>
                 Live:&nbsp;
                 <a className={A} href="https://idx-trading-lab.vercel.app/" target="_blank" rel="noreferrer">
@@ -278,10 +280,10 @@ export default function CVPage() {
           <article className="avoid-break mb-3 print:mb-2">
             <div className="flex items-baseline justify-between gap-3">
               <h3 className="font-semibold leading-tight text-slate-900">Foodies | Recipe Web App</h3>
-              <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2026</span>
+              <span className={cls("text-sm print:text-[9.2px]", MUTED)}>2026</span>
             </div>
             <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
-              <li className={LI}>Laravel app for recipes with authentication, create-edit-delete recipe flow, and responsive detail pages.</li>
+              <li className={LI}>Laravel recipe app with authentication, recipe CRUD, and responsive detail pages.</li>
               <li className={LI}>Stack: Laravel 11, Blade, Tailwind CSS, Vite, SQLite/MySQL, InfinityFree.</li>
               <li className={LI}>
                 Live:&nbsp;
@@ -295,7 +297,7 @@ export default function CVPage() {
           <article className="avoid-break mb-3 print:mb-2">
             <div className="flex items-baseline justify-between gap-3">
               <h3 className="font-semibold leading-tight text-slate-900">Kripuk.com</h3>
-              <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2025</span>
+              <span className={cls("text-sm print:text-[9.2px]", MUTED)}>2025</span>
             </div>
             <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
               <li className={LI}>Next.js and Tailwind content/catalog site with responsive layout and Vercel deployment.</li>
@@ -311,7 +313,7 @@ export default function CVPage() {
           <article className="avoid-break mb-3 print:mb-2">
             <div className="flex items-baseline justify-between gap-3">
               <h3 className="font-semibold leading-tight text-slate-900">Palorant | Valorant-style Web Project</h3>
-              <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2024</span>
+              <span className={cls("text-sm print:text-[9.2px]", MUTED)}>2024</span>
             </div>
             <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
               <li className={LI}>Multi-page front-end project covering agents, maps, news, and bug report pages.</li>
@@ -348,7 +350,7 @@ export default function CVPage() {
           <article className="avoid-break mb-3 print:mb-2">
             <div className="flex items-baseline justify-between gap-3">
               <h3 className="font-semibold leading-tight text-slate-900">Music & Mental Health Research Paper</h3>
-              <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2023</span>
+              <span className={cls("text-sm print:text-[9.2px]", MUTED)}>2023</span>
             </div>
             <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
               <li className={LI}>Python-based analysis of music usage as a treatment factor for mental health.</li>
@@ -364,7 +366,7 @@ export default function CVPage() {
           <article className="avoid-break mb-3 print:mb-2">
             <div className="flex items-baseline justify-between gap-3">
               <h3 className="font-semibold leading-tight text-slate-900">CCA Study | Campus Environment & Psychological Health</h3>
-              <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2025</span>
+              <span className={cls("text-sm print:text-[9.2px]", MUTED)}>2025</span>
             </div>
             <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
               <li className={LI}>Canonical Correlation Analysis in R using BINUS University student data.</li>
@@ -384,7 +386,7 @@ export default function CVPage() {
           <article className="avoid-break mb-0 print:mb-0">
             <div className="flex items-baseline justify-between gap-3">
               <h3 className="font-semibold leading-tight text-slate-900">Business Analytics Dashboards</h3>
-              <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2025</span>
+              <span className={cls("text-sm print:text-[9.2px]", MUTED)}>2025</span>
             </div>
             <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
               <li className={LI}>Tableau Public dashboards for sales KPIs, executive overview, and business monitoring.</li>
