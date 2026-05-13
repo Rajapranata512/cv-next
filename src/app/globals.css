@@ -792,6 +792,15 @@ body::before {
   --project-chip-border: rgba(255, 255, 255, 0.2);
   --project-aura-speed: 8s;
   cursor: pointer;
+  touch-action: manipulation;
+}
+
+.project-card a,
+.project-card button,
+.featured-nav-button,
+.featured-progress-segment,
+.featured-thumb {
+  touch-action: manipulation;
 }
 
 .project-card-kinetic {

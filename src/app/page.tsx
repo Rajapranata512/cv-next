@@ -8,6 +8,7 @@ import {
   type CSSProperties,
   type FormEvent as ReactFormEvent,
   type FocusEvent as ReactFocusEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
@@ -95,8 +96,8 @@ type Project = {
 function isProjectCardControl(target: EventTarget | null, currentTarget: HTMLElement) {
   if (!(target instanceof HTMLElement)) return false;
 
-  const control = target.closest("a, button, input, textarea, select, summary");
-  return Boolean(control && currentTarget.contains(control));
+  const control = target.closest("a, button, input, textarea, select, summary, [role='button'], [role='link']");
+  return Boolean(control && control !== currentTarget && currentTarget.contains(control));
 }
 
 type SceneTone = "amber" | "rose" | "cyan";
@@ -783,7 +784,6 @@ function ProjectReelCard({
   isActive,
   onActivate,
   onDeactivate,
-  onFocusProject,
   onOpenDetails,
 }: {
   project: Project;
@@ -793,10 +793,10 @@ function ProjectReelCard({
   isActive: boolean;
   onActivate: () => void;
   onDeactivate: () => void;
-  onFocusProject: () => void;
   onOpenDetails: () => void;
 }) {
   const Icon = project.icon;
+  const tapStartRef = useRef<{ pointerId: number; x: number; y: number; startedOnControl: boolean } | null>(null);
   const tiltX = useSpring(0, { stiffness: 180, damping: 22, mass: 0.34 });
   const tiltY = useSpring(0, { stiffness: 180, damping: 22, mass: 0.34 });
   const spotlightX = useSpring(50, { stiffness: 210, damping: 24, mass: 0.28 });
@@ -858,6 +858,43 @@ function ProjectReelCard({
     [onOpenDetails],
   );
 
+  const handleCardPointerDown = useCallback(
+    (event: ReactPointerEvent<HTMLElement>) => {
+      handleActivate();
+      tapStartRef.current = {
+        pointerId: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        startedOnControl: isProjectCardControl(event.target, event.currentTarget),
+      };
+    },
+    [handleActivate],
+  );
+
+  const handleCardPointerUp = useCallback(
+    (event: ReactPointerEvent<HTMLElement>) => {
+      const start = tapStartRef.current;
+      tapStartRef.current = null;
+      if (!start || start.pointerId !== event.pointerId) return;
+      if (start.startedOnControl || isProjectCardControl(event.target, event.currentTarget)) return;
+
+      const distance = Math.hypot(event.clientX - start.x, event.clientY - start.y);
+      if (distance > 8) return;
+      onOpenDetails();
+    },
+    [onOpenDetails],
+  );
+
+  const handleCardKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLElement>) => {
+      if (isProjectCardControl(event.target, event.currentTarget)) return;
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      onOpenDetails();
+    },
+    [onOpenDetails],
+  );
+
   const cardStyle = {
     "--project-aura-1": project.mood.aura[0],
     "--project-aura-2": project.mood.aura[1],
@@ -879,6 +916,8 @@ function ProjectReelCard({
         `project-card project-tone-${project.mood.tone} project-card-kinetic group cinema-panel relative overflow-hidden rounded-3xl border border-white/15`,
         isActive ? "is-active-project" : "",
       ].join(" ")}
+      role="button"
+      tabIndex={0}
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.25 }}
@@ -888,8 +927,12 @@ function ProjectReelCard({
       onPointerMove={handlePointerMove}
       onFocusCapture={handleActivate}
       onBlurCapture={handleBlurCapture}
-      onPointerDown={handleActivate}
+      onPointerDown={handleCardPointerDown}
+      onPointerUp={handleCardPointerUp}
       onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+      data-cursor="Details"
+      aria-label={`Open ${project.title} project details`}
       whileHover={
         reducedMotion
           ? undefined
@@ -954,20 +997,21 @@ function ProjectReelCard({
         <div className="flex flex-wrap items-center gap-3 pt-2">
           <button
             type="button"
-            onClick={onFocusProject}
-            data-cursor="Focus"
+            onClick={onOpenDetails}
+            data-cursor="Open"
             className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-white/20 bg-white/[0.06] px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#fff4dd] transition hover:border-white/35 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--project-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12] sm:flex-none"
           >
-            Feature <ChevronRight className="h-3.5 w-3.5" />
+            Open details <ChevronRight className="h-3.5 w-3.5" />
           </button>
-          <button
-            type="button"
-            onClick={onOpenDetails}
-            data-cursor="Inspect"
+          <a
+            href={project.link}
+            target="_blank"
+            rel="noreferrer"
+            data-cursor="Visit"
             className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-white/15 px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#f8eddc]/82 transition hover:border-[var(--project-accent-soft)] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--project-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12] sm:flex-none"
           >
-            Details
-          </button>
+            {liveLabel} <ExternalLink className="h-3.5 w-3.5" />
+          </a>
         </div>
       </div>
     </motion.article>
@@ -1139,9 +1183,10 @@ function FeaturedProjectSlider({
                 <button
                   key={`thumb-${item.title}`}
                   type="button"
-                  onClick={() => onChange(idx)}
+                  onClick={() => onOpenDetails(idx)}
                   data-cursor={item.title}
                   className={`featured-thumb ${idx === activeIndex ? "is-active" : ""}`}
+                  aria-label={`Open ${item.title} project details`}
                 >
                   <span className="font-cinema-display text-lg text-[#fff4e2]">{item.title}</span>
                   <span className="text-[0.62rem] uppercase tracking-[0.16em] text-[#f8eddc]/62">{item.year}</span>
@@ -2698,7 +2743,7 @@ export default function Home() {
                 <h3 className="font-cinema-display mt-2 text-2xl text-[#fff4df] md:text-4xl">Interactive Project Grid</h3>
               </div>
               <p className="hidden max-w-sm text-right text-sm leading-relaxed text-[#f8eddc]/62 md:block">
-                Hover for 3D tilt and atmosphere changes. Pin a card into the featured reel or open the full modal scene.
+                Hover for 3D tilt, open details with one click, or jump directly to the live site.
               </p>
             </div>
             <div className="grid gap-7 md:grid-cols-2">
@@ -2712,10 +2757,6 @@ export default function Home() {
                   isActive={focusedProjectIndex === idx}
                   onActivate={() => setHoveredProjectIndex(idx)}
                   onDeactivate={() => setHoveredProjectIndex((current) => (current === idx ? null : current))}
-                  onFocusProject={() => {
-                    setFeaturedProjectIndex(idx);
-                    setHoveredProjectIndex(idx);
-                  }}
                   onOpenDetails={() => {
                     setFeaturedProjectIndex(idx);
                     setModalProjectIndex(idx);
