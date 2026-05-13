@@ -8,6 +8,7 @@ import {
   type CSSProperties,
   type FormEvent as ReactFormEvent,
   type FocusEvent as ReactFocusEvent,
+  type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import dynamic from "next/dynamic";
@@ -89,6 +90,14 @@ type Project = {
   metrics: string[];
   narrative: string[];
 };
+
+function isProjectCardControl(target: EventTarget | null, currentTarget: HTMLElement) {
+  if (!(target instanceof HTMLElement)) return false;
+
+  const control = target.closest("a, button, input, textarea, select, summary");
+  return Boolean(control && currentTarget.contains(control));
+}
+
 type SceneTone = "amber" | "rose" | "cyan";
 type SceneId = "intro" | "journey" | "skills" | "projects" | "contact";
 type StorySection = { id: SceneId; label: string; cue: string; code: string };
@@ -838,6 +847,14 @@ function ProjectReelCard({
     [handleDeactivate],
   );
 
+  const handleCardClick = useCallback(
+    (event: ReactMouseEvent<HTMLElement>) => {
+      if (isProjectCardControl(event.target, event.currentTarget)) return;
+      onOpenDetails();
+    },
+    [onOpenDetails],
+  );
+
   const cardStyle = {
     "--project-aura-1": project.mood.aura[0],
     "--project-aura-2": project.mood.aura[1],
@@ -868,6 +885,7 @@ function ProjectReelCard({
       onFocusCapture={handleActivate}
       onBlurCapture={handleBlurCapture}
       onPointerDown={handleActivate}
+      onClick={handleCardClick}
       whileHover={
         reducedMotion
           ? undefined
@@ -1164,6 +1182,7 @@ function ProjectSceneModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.18 }}
           onClick={onClose}
         >
           <motion.div
@@ -1171,7 +1190,7 @@ function ProjectSceneModal({
             initial={{ opacity: 0, y: 32, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.985 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
             onClick={(event) => event.stopPropagation()}
           >
             <div

@@ -75,10 +75,10 @@ export default function CVPage() {
         <div className="flex items-start gap-3 print:gap-2.5">
           <Image
             src="/avatar.jpg"
-            width={56}
-            height={56}
+            width={72}
+            height={72}
             alt="Profile photo"
-            className="h-14 w-14 rounded-xl object-cover print:h-12 print:w-12 print:rounded-md"
+            className="h-16 w-16 rounded-xl object-cover print:h-16 print:w-16 print:rounded-md"
           />
 
           <div className="min-w-0 flex-1">
@@ -140,13 +140,6 @@ export default function CVPage() {
                 </a>
               </div>
 
-              {/* Sertifikat clickable di web: pakai path relatif agar cocok untuk localhost dan deployment */}
-              <div className="flex flex-wrap items-center">
-                <span className="font-semibold">English Certificate:</span>&nbsp;
-                <a className={A} href={CERT_EN.path} target="_blank" rel="noreferrer">
-                  {CERT_EN.label}
-                </a>
-              </div>
             </div>
           </div>
         </div>
@@ -159,21 +152,25 @@ export default function CVPage() {
         <section className={cls(CARD, PAD, "avoid-break print:col-span-2")}>
           <SectionTitle>Summary</SectionTitle>
           <p className={cls(BODY, "text-slate-900 print:text-black")}>
-            Final-year student in Computer Science and Statistics with strong interest in data analytics and modern web
-            development. Proficient in R and Python for data cleaning, analysis, and forecasting, and experienced in
-            building polished UI with Next.js. Comfortable translating complex findings into clear, actionable insights
-            through dashboards and concise reporting. Currently seeking an internship to contribute to data pipelines,
-            analytics, and practical web features.
+            Final-year Computer Science and Statistics student targeting web/full-stack and data analytics internships.
+            Experienced building Laravel/Next.js applications, deploying projects to Vercel and cPanel, and translating
+            data work in Python, R, SQL, and Tableau into clear dashboards and reports. Comfortable working across UI,
+            backend workflows, deployment, and analytical problem solving.
           </p>
         </section>
 
         <section className={cls(CARD, PAD, "avoid-break")}>
           <SectionTitle>Skills</SectionTitle>
           <ul className="list-disc ps-5 space-y-1 print:space-y-0.5">
-            <li className={LI}>TypeScript, Next.js, Tailwind</li>
-            <li className={LI}>HTML, CSS, Laravel</li>
-            <li className={LI}>R, Python, SQL (MySQL)</li>
-            <li className={LI}>Tableau, Figma</li>
+            <li className={LI}>
+              <span className="font-semibold">Web:</span> Next.js, TypeScript, Laravel, Livewire, Filament, Tailwind
+            </li>
+            <li className={LI}>
+              <span className="font-semibold">Data:</span> Python, R, SQL/MySQL, Tableau, statistical analysis
+            </li>
+            <li className={LI}>
+              <span className="font-semibold">Tools:</span> GitHub, Vercel, cPanel, Figma
+            </li>
           </ul>
         </section>
 
@@ -235,117 +232,22 @@ export default function CVPage() {
       </div>
 
       {/* =========================
-          PROJECTS
+          SELECTED PROJECTS
          ========================= */}
       <section className={cls(CARD, PAD, "mt-5 print:mt-3")}>
-        <SectionTitle>College Projects</SectionTitle>
+        <SectionTitle>Selected Technical Projects</SectionTitle>
 
         <div className="space-y-3 print:columns-2 print:gap-6 print:space-y-0">
-          <article className="avoid-break mb-3 print:mb-2">
-            <div className="flex items-baseline justify-between gap-3">
-              <h3 className="font-semibold leading-tight text-slate-900">Paper</h3>
-              <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2023</span>
-            </div>
-            <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
-              <li className={LI}>Analisis Python Penggunaan Musik Sebagai Pengobatan Gangguan Mental.</li>
-              <li className={LI}>
-                Link:&nbsp;
-                <a
-                  className={A}
-                  href="https://journalcenter.org/index.php/jupti/article/view/1721"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  journalcenter.org/jupti/article/view/1721
-                </a>
-              </li>
-            </ul>
-          </article>
-
-          <article className="avoid-break mb-3 print:mb-2">
-            <div className="flex items-baseline justify-between gap-3">
-              <h3 className="font-semibold leading-tight text-slate-900">Palorant | Valorant-style Web Project</h3>
-              <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2024</span>
-            </div>
-            <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
-              <li className={LI}>Agents, Maps, News, and Bug Report pages for HCI lab assignment.</li>
-              <li className={LI}>Stack: semantic HTML, modern CSS, vanilla JS, GitHub Pages.</li>
-              <li className={cls(LI, "flex items-center gap-2")}>
-                <SiFigma className="h-4 w-4" aria-hidden />
-                <a
-                  className={A}
-                  target="_blank"
-                  rel="noreferrer"
-                  href="https://www.figma.com/proto/smMeAYuwtlEs73TzAep2DR/project_lab?t=MMX8z7CteRkoMcMN-1&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1&node-id=2-2&starting-point-node-id=2%3A2&show-proto-sidebar=1"
-                >
-                  View Prototype
-                </a>
-              </li>
-              <li className={LI}>
-                Live:&nbsp;
-                <a className={A} href="https://rajapranata512.github.io/palorant-website/" target="_blank" rel="noreferrer">
-                  rajapranata512.github.io/palorant-website/
-                </a>
-              </li>
-            </ul>
-          </article>
-
-          <article className="avoid-break mb-3 print:mb-2">
-            <div className="flex items-baseline justify-between gap-3">
-              <h3 className="font-semibold leading-tight text-slate-900">Campus Physical Environment and Psychological Health (CCA)</h3>
-              <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2025</span>
-            </div>
-            <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
-              <li className={LI}>Study using Canonical Correlation Analysis (CCA) in R.</li>
-              <li className={LI}>Scope: BINUS University students (Jakarta/Kemanggisan).</li>
-              <li className={LI}>
-                PDF:&nbsp;
-                <Link href="/papers/aol-multivariate.pdf" className={A} target="_blank">
-                  View
-                </Link>
-                &nbsp;| Roles:&nbsp;
-                <Link href="/papers/aol-pembagian-kerja.docx" className={A} target="_blank">
-                  DOCX
-                </Link>
-                &nbsp;| Output:&nbsp;
-                <Link href="/papers/aol-output-code.txt" className={A} target="_blank">
-                  TXT
-                </Link>
-              </li>
-            </ul>
-          </article>
-
-          <article className="avoid-break mb-3 print:mb-2">
-            <div className="flex items-baseline justify-between gap-3">
-              <h3 className="font-semibold leading-tight text-slate-900">Business Analytics Dashboards (Tableau Public)</h3>
-              <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2025</span>
-            </div>
-            <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
-              <li className={LI}>Interactive dashboards for sales KPIs and executive overview.</li>
-              <li className={LI}>
-                Link:&nbsp;
-                <a
-                  className={A}
-                  href="https://public.tableau.com/app/profile/raja.adi.pranata/vizzes"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  tableau.com/profile/raja.adi.pranata/vizzes
-                </a>
-              </li>
-            </ul>
-          </article>
-
           <article className="avoid-break mb-3 print:mb-2">
             <div className="flex items-baseline justify-between gap-3">
               <h3 className="font-semibold leading-tight text-slate-900">Asosiasi Alumni DRM BINUS Website</h3>
               <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2026</span>
             </div>
             <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
-              <li className={LI}>Laravel 12 platform for alumni association content, member profiles, events, articles, donations, and documents.</li>
-              <li className={LI}>Built admin operations with Filament resources, visitor analytics, upload flows, and authenticated alumni features.</li>
+              <li className={LI}>Laravel 12 platform for alumni content, profiles, events, articles, donations, documents, and analytics.</li>
+              <li className={LI}>Built admin workflows with Filament, authenticated alumni features, upload flows, and visitor analytics.</li>
               <li className={LI}>
-                Deployment: cPanel/public_html setup, Vite assets, storage handling, cron optimization, and GitHub Actions workflow.
+                Deployed through cPanel/public_html setup, Vite assets, storage handling, cron optimization, and GitHub Actions.
               </li>
               <li className={LI}>
                 Site:&nbsp;
@@ -363,7 +265,7 @@ export default function CVPage() {
             </div>
             <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
               <li className={LI}>Trading-focused web lab for exploring Indonesian market data and analysis workflows.</li>
-              <li className={LI}>Stack: modern web UI, data-oriented interface, Vercel deployment.</li>
+              <li className={LI}>Designed scan-friendly data UI for market review and deployed the app on Vercel.</li>
               <li className={LI}>
                 Live:&nbsp;
                 <a className={A} href="https://idx-trading-lab.vercel.app/" target="_blank" rel="noreferrer">
@@ -375,11 +277,28 @@ export default function CVPage() {
 
           <article className="avoid-break mb-3 print:mb-2">
             <div className="flex items-baseline justify-between gap-3">
+              <h3 className="font-semibold leading-tight text-slate-900">Foodies | Recipe Web App</h3>
+              <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2026</span>
+            </div>
+            <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
+              <li className={LI}>Laravel app for recipes with authentication, create-edit-delete recipe flow, and responsive detail pages.</li>
+              <li className={LI}>Stack: Laravel 11, Blade, Tailwind CSS, Vite, SQLite/MySQL, InfinityFree.</li>
+              <li className={LI}>
+                Live:&nbsp;
+                <a className={A} href="https://foodies.infinityfreeapp.com/" target="_blank" rel="noreferrer">
+                  foodies.infinityfreeapp.com
+                </a>
+              </li>
+            </ul>
+          </article>
+
+          <article className="avoid-break mb-3 print:mb-2">
+            <div className="flex items-baseline justify-between gap-3">
               <h3 className="font-semibold leading-tight text-slate-900">Kripuk.com</h3>
               <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2025</span>
             </div>
             <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
-              <li className={LI}>Content-plus catalog site on Next.js and Tailwind (Vercel).</li>
+              <li className={LI}>Next.js and Tailwind content/catalog site with responsive layout and Vercel deployment.</li>
               <li className={LI}>
                 Live:&nbsp;
                 <a className={A} href="https://kripuk-website-binus.vercel.app/" target="_blank" rel="noreferrer">
@@ -389,18 +308,90 @@ export default function CVPage() {
             </ul>
           </article>
 
-          <article className="avoid-break mb-0 print:mb-0">
+          <article className="avoid-break mb-3 print:mb-2">
             <div className="flex items-baseline justify-between gap-3">
-              <h3 className="font-semibold leading-tight text-slate-900">Foodies | Food-themed Web Project</h3>
-              <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2026</span>
+              <h3 className="font-semibold leading-tight text-slate-900">Palorant | Valorant-style Web Project</h3>
+              <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2024</span>
             </div>
             <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
-              <li className={LI}>Laravel web app for recipes with login/register and create-edit-delete recipe flow.</li>
-              <li className={LI}>Stack: PHP (Laravel 11), Blade, Tailwind CSS, Vite, SQLite/MySQL, InfinityFree.</li>
+              <li className={LI}>Multi-page front-end project covering agents, maps, news, and bug report pages.</li>
+              <li className={LI}>Stack: semantic HTML, modern CSS, vanilla JS, Figma prototype, GitHub Pages.</li>
+              <li className={cls(LI, "flex items-center gap-2")}>
+                <SiFigma className="h-4 w-4" aria-hidden />
+                <a
+                  className={A}
+                  target="_blank"
+                  rel="noreferrer"
+                  href="https://www.figma.com/proto/smMeAYuwtlEs73TzAep2DR/project_lab?t=MMX8z7CteRkoMcMN-1&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1&node-id=2-2&starting-point-node-id=2%3A2&show-proto-sidebar=1"
+                >
+                  Prototype
+                </a>
+              </li>
               <li className={LI}>
                 Live:&nbsp;
-                <a className={A} href="https://foodies.infinityfreeapp.com/" target="_blank" rel="noreferrer">
-                  foodies.infinityfreeapp.com
+                <a className={A} href="https://rajapranata512.github.io/palorant-website/" target="_blank" rel="noreferrer">
+                  rajapranata512.github.io/palorant-website/
+                </a>
+              </li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      {/* =========================
+          RESEARCH / ANALYTICS
+         ========================= */}
+      <section className={cls(CARD, PAD, "mt-5 print:mt-3")}>
+        <SectionTitle>Research & Analytics</SectionTitle>
+
+        <div className="space-y-3 print:columns-2 print:gap-6 print:space-y-0">
+          <article className="avoid-break mb-3 print:mb-2">
+            <div className="flex items-baseline justify-between gap-3">
+              <h3 className="font-semibold leading-tight text-slate-900">Music & Mental Health Research Paper</h3>
+              <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2023</span>
+            </div>
+            <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
+              <li className={LI}>Python-based analysis of music usage as a treatment factor for mental health.</li>
+              <li className={LI}>
+                Published:&nbsp;
+                <a className={A} href="https://journalcenter.org/index.php/jupti/article/view/1721" target="_blank" rel="noreferrer">
+                  JUPTI
+                </a>
+              </li>
+            </ul>
+          </article>
+
+          <article className="avoid-break mb-3 print:mb-2">
+            <div className="flex items-baseline justify-between gap-3">
+              <h3 className="font-semibold leading-tight text-slate-900">CCA Study | Campus Environment & Psychological Health</h3>
+              <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2025</span>
+            </div>
+            <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
+              <li className={LI}>Canonical Correlation Analysis in R using BINUS University student data.</li>
+              <li className={LI}>
+                PDF:&nbsp;
+                <Link href="/papers/aol-multivariate.pdf" className={A} target="_blank">
+                  View
+                </Link>
+                &nbsp;| Output:&nbsp;
+                <Link href="/papers/aol-output-code.txt" className={A} target="_blank">
+                  TXT
+                </Link>
+              </li>
+            </ul>
+          </article>
+
+          <article className="avoid-break mb-0 print:mb-0">
+            <div className="flex items-baseline justify-between gap-3">
+              <h3 className="font-semibold leading-tight text-slate-900">Business Analytics Dashboards</h3>
+              <span className={cls("text-sm print:text-[8.5px]", MUTED)}>2025</span>
+            </div>
+            <ul className="mt-1 list-disc ps-5 space-y-1 print:mt-0.5 print:space-y-0.5 print:ps-3.5">
+              <li className={LI}>Tableau Public dashboards for sales KPIs, executive overview, and business monitoring.</li>
+              <li className={LI}>
+                Link:&nbsp;
+                <a className={A} href="https://public.tableau.com/app/profile/raja.adi.pranata/vizzes" target="_blank" rel="noreferrer">
+                  Tableau Public
                 </a>
               </li>
             </ul>
