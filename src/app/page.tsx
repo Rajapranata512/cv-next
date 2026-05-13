@@ -79,6 +79,7 @@ type Project = {
   title: string;
   description: string;
   link: string;
+  liveLabel?: string;
   image: string;
   tags: string[];
   icon: LucideIcon;
@@ -137,6 +138,7 @@ const projects: Project[] = [
     title: "Asosiasi Alumni DRM",
     description: "Laravel alumni association platform with member flows, content management, analytics, and cPanel deployment.",
     link: "https://asosiasidrm.id/",
+    liveLabel: "Association site",
     image: "https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop",
     tags: ["Laravel 12", "Filament", "Livewire", "cPanel", "GitHub Actions"],
     icon: Globe2,
@@ -174,6 +176,7 @@ const projects: Project[] = [
     title: "Foodies",
     description: "Laravel recipe platform with auth flow, CRUD recipes, and responsive detail pages.",
     link: "https://foodies.infinityfreeapp.com/",
+    liveLabel: "Foodies site",
     image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=2070&auto=format&fit=crop",
     tags: ["Laravel", "Blade", "Tailwind", "SQLite/MySQL"],
     icon: Code2,
@@ -868,6 +871,7 @@ function ProjectReelCard({
     "--project-chip-border": project.mood.chipBorder,
     "--project-aura-speed": `${project.mood.auraSpeed}s`,
   } as CSSProperties;
+  const liveLabel = project.liveLabel ?? "Visit live";
 
   return (
     <motion.article
@@ -936,7 +940,7 @@ function ProjectReelCard({
             className="project-card-visit inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-full border border-white/20 bg-black/25 px-4 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#f8ead4] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--project-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12]"
             aria-label={`Visit ${project.title}`}
           >
-            Visit live <ExternalLink className="h-3.5 w-3.5" />
+            {liveLabel} <ExternalLink className="h-3.5 w-3.5" />
           </a>
         </div>
         <p className="text-sm leading-relaxed text-[#f8eddc]/80">{project.description}</p>
@@ -983,6 +987,7 @@ function FeaturedProjectSlider({
 }) {
   const reducedMotion = useReducedMotion();
   const project = projects[activeIndex];
+  const liveLabel = project.liveLabel ?? "Visit live";
 
   return (
     <motion.div
@@ -1081,7 +1086,7 @@ function FeaturedProjectSlider({
                   data-cursor="Visit"
                   className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/18 px-5 py-2.5 text-sm font-semibold text-[#fff3dc] transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--featured-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12]"
                 >
-                  Visit live <ExternalLink className="h-4 w-4" />
+                  {liveLabel} <ExternalLink className="h-4 w-4" />
                 </a>
               </Magnetic>
             </div>
@@ -1157,6 +1162,8 @@ function ProjectSceneModal({
   project: Project | null;
   onClose: () => void;
 }) {
+  const liveLabel = project?.liveLabel ?? "Visit Live Project";
+
   useEffect(() => {
     if (!project) return undefined;
 
@@ -1262,7 +1269,7 @@ function ProjectSceneModal({
                       data-cursor="Visit"
                       className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-[#091018] transition hover:scale-[1.02]"
                     >
-                      Visit Live Project <ExternalLink className="h-4 w-4" />
+                      {liveLabel} <ExternalLink className="h-4 w-4" />
                     </a>
                   </Magnetic>
                   <Magnetic>
