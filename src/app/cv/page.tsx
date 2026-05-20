@@ -76,7 +76,7 @@ export default function CVPage() {
       <section className={cls(CARD, "mb-3 p-3 print:mb-3 print:border-b print:border-slate-300 print:p-0 print:pb-2.5")}>
         <div className="flex items-start gap-3 print:gap-3">
           <Image
-            src="/avatar.jpg"
+            src="/cv-avatar.jpg"
             width={80}
             height={80}
             alt="Profile photo"
