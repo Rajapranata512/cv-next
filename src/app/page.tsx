@@ -359,6 +359,44 @@ const projects: Project[] = [
       q: 1.34,
     },
   },
+  {
+    title: "From Words to Wages",
+    description: "ICAKMPET 2026 Accepted Paper: Text Mining on Indonesian Job Descriptions to Predict Salary Determinants.",
+    link: "https://github.com/Rajapranata512/RESEARCH_METHODOLOGY",
+    liveLabel: "Research Code",
+    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop",
+    tags: ["Machine Learning", "NLP", "Text Mining", "Python", "Research"],
+    icon: Database,
+    year: "2026",
+    role: "Lead Researcher",
+    spotlight: "Published research applying NLP to Indonesian job postings, featuring TF-IDF extraction and regularized regression (Ridge, Lasso) to determine wage impacts.",
+    metrics: ["ICAKMPET 2026 Accepted", "Ridge & Lasso Models", "TF-IDF Analysis"],
+    narrative: [
+      "Extracted and cleansed bilingual Indonesian job descriptions to identify key skill words driving salaries.",
+      "Trained Ridge and Lasso regression models, showing that text mining adds significant predictive value for salaries.",
+      "Paper accepted for presentation at ICAKMPET-2026. (Includes LOA and published findings)."
+    ],
+    mood: {
+      tone: "executive",
+      aura: ["rgba(56, 189, 248, 0.3)", "rgba(167, 139, 250, 0.28)"],
+      sheen: "rgba(165, 180, 252, 0.5)",
+      overlay: ["rgba(0, 0, 0, 0.03)", "rgba(8, 12, 38, 0.83)"],
+      accent: "#38bdf8",
+      icon: "#7dd3fc",
+      chipBg: "rgba(59, 130, 246, 0.14)",
+      chipBorder: "rgba(99, 102, 241, 0.34)",
+      auraSpeed: 8.8,
+      hover: { y: -10, rotateX: 3.4, rotateY: -3.1, scale: 1.016 },
+    },
+    cue: {
+      name: "Research Insight",
+      motif: [220, 277, 330, 415],
+      waveform: "sine",
+      pan: [0.08, 0.34],
+      glide: 1.04,
+      q: 0.94,
+    },
+  },
 ];
 
 const reelSkills = ["TypeScript", "Next.js", "Laravel", "Filament", "Livewire", "Python", "R", "SQL", "Tableau", "Figma", "Tailwind CSS"];
