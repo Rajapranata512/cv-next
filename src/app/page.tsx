@@ -12,6 +12,7 @@ import {
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from "react";
+import React from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import {
@@ -33,6 +34,7 @@ import {
   ChevronRight,
   Code2,
   Database,
+  Download,
   ExternalLink,
   Film,
   Github,
@@ -93,11 +95,10 @@ type Project = {
   narrative: string[];
 };
 
-function isProjectCardControl(target: EventTarget | null, currentTarget: HTMLElement) {
+function isProjectCardControl(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
 
-  const control = target.closest("a, button, input, textarea, select, summary, [role='button'], [role='link']");
-  return Boolean(control && control !== currentTarget && currentTarget.contains(control));
+  return Boolean(target.closest("a, button, input, textarea, select, summary"));
 }
 
 type SceneTone = "amber" | "rose" | "cyan";
@@ -588,7 +589,7 @@ function SceneDivider({ tone = "amber" }: { tone?: SceneTone }) {
   );
 }
 
-function SceneAtmosphere({ scene, enabled = true }: { scene: SceneId; enabled?: boolean }) {
+const SceneAtmosphere = React.memo(function SceneAtmosphere({ scene, enabled = true }: { scene: SceneId; enabled?: boolean }) {
   if (!enabled) return null;
   return (
     <AnimatePresence mode="wait">
@@ -603,9 +604,9 @@ function SceneAtmosphere({ scene, enabled = true }: { scene: SceneId; enabled?: 
       />
     </AnimatePresence>
   );
-}
+});
 
-function SceneFusionLayer({
+const SceneFusionLayer = React.memo(function SceneFusionLayer({
   scene,
   projectMood,
   enabled = true,
@@ -653,7 +654,7 @@ function SceneFusionLayer({
       </motion.div>
     </AnimatePresence>
   );
-}
+});
 
 function SceneCutFlash({ cutToken, enabled = true }: { cutToken: number; enabled?: boolean }) {
   const reducedMotion = useReducedMotion();
@@ -834,11 +835,10 @@ function ProjectReelCard({
   onOpenDetails: () => void;
 }) {
   const Icon = project.icon;
-  const tapStartRef = useRef<{ pointerId: number; x: number; y: number; startedOnControl: boolean } | null>(null);
   const tiltX = useSpring(0, { stiffness: 180, damping: 22, mass: 0.34 });
   const tiltY = useSpring(0, { stiffness: 180, damping: 22, mass: 0.34 });
   const spotlightX = useSpring(50, { stiffness: 210, damping: 24, mass: 0.28 });
-  const spotlightY = useSpring(40, { stiffness: 210, damping: 24, mass: 0.28 });
+  const spotlightY = useSpring(50, { stiffness: 210, damping: 24, mass: 0.28 });
   const hoverLift = useSpring(0, { stiffness: 200, damping: 24, mass: 0.32 });
   const spotlightOpacity = useTransform(hoverLift, [0, 1], [0.04, 0.95]);
   const spotlightGradient = useMotionTemplate`radial-gradient(260px circle at ${spotlightX}% ${spotlightY}%, ${colorWithAlpha(project.mood.accent, 0.42)} 0%, transparent 74%)`;
@@ -848,7 +848,7 @@ function ProjectReelCard({
     tiltY.set(0);
     hoverLift.set(0);
     spotlightX.set(50);
-    spotlightY.set(40);
+    spotlightY.set(50);
   }, [hoverLift, spotlightX, spotlightY, tiltX, tiltY]);
 
   const handlePointerMove = useCallback(
@@ -868,8 +868,11 @@ function ProjectReelCard({
     [immersiveMode, project.mood.hover.rotateX, project.mood.hover.rotateY, reducedMotion, spotlightX, spotlightY, tiltX, tiltY],
   );
 
-  const handleActivate = useCallback(() => {
-    onActivate();
+  const handleActivate = useCallback((e?: ReactPointerEvent<HTMLElement> | React.FocusEvent<HTMLElement> | any) => {
+    if (e && e.target && isProjectCardControl(e.target as EventTarget)) return;
+    React.startTransition(() => {
+      onActivate();
+    });
     if (reducedMotion || !immersiveMode) return;
     hoverLift.set(1);
   }, [hoverLift, immersiveMode, onActivate, reducedMotion]);
@@ -878,60 +881,6 @@ function ProjectReelCard({
     onDeactivate();
     resetKinetics();
   }, [onDeactivate, resetKinetics]);
-
-  const handleBlurCapture = useCallback(
-    (event: ReactFocusEvent<HTMLElement>) => {
-      const next = event.relatedTarget;
-      if (next instanceof Node && event.currentTarget.contains(next)) return;
-      handleDeactivate();
-    },
-    [handleDeactivate],
-  );
-
-  const handleCardClick = useCallback(
-    (event: ReactMouseEvent<HTMLElement>) => {
-      if (isProjectCardControl(event.target, event.currentTarget)) return;
-      onOpenDetails();
-    },
-    [onOpenDetails],
-  );
-
-  const handleCardPointerDown = useCallback(
-    (event: ReactPointerEvent<HTMLElement>) => {
-      handleActivate();
-      tapStartRef.current = {
-        pointerId: event.pointerId,
-        x: event.clientX,
-        y: event.clientY,
-        startedOnControl: isProjectCardControl(event.target, event.currentTarget),
-      };
-    },
-    [handleActivate],
-  );
-
-  const handleCardPointerUp = useCallback(
-    (event: ReactPointerEvent<HTMLElement>) => {
-      const start = tapStartRef.current;
-      tapStartRef.current = null;
-      if (!start || start.pointerId !== event.pointerId) return;
-      if (start.startedOnControl || isProjectCardControl(event.target, event.currentTarget)) return;
-
-      const distance = Math.hypot(event.clientX - start.x, event.clientY - start.y);
-      if (distance > 8) return;
-      onOpenDetails();
-    },
-    [onOpenDetails],
-  );
-
-  const handleCardKeyDown = useCallback(
-    (event: ReactKeyboardEvent<HTMLElement>) => {
-      if (isProjectCardControl(event.target, event.currentTarget)) return;
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      onOpenDetails();
-    },
-    [onOpenDetails],
-  );
 
   const cardStyle = {
     "--project-aura-1": project.mood.aura[0],
@@ -954,8 +903,6 @@ function ProjectReelCard({
         `project-card project-tone-${project.mood.tone} project-card-kinetic group cinema-panel relative overflow-hidden rounded-3xl border border-white/15`,
         isActive ? "is-active-project" : "",
       ].join(" ")}
-      role="button"
-      tabIndex={0}
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.25 }}
@@ -963,12 +910,6 @@ function ProjectReelCard({
       onPointerEnter={handleActivate}
       onPointerLeave={handleDeactivate}
       onPointerMove={handlePointerMove}
-      onFocusCapture={handleActivate}
-      onBlurCapture={handleBlurCapture}
-      onPointerDown={handleCardPointerDown}
-      onPointerUp={handleCardPointerUp}
-      onClick={handleCardClick}
-      onKeyDown={handleCardKeyDown}
       data-cursor="Details"
       aria-label={`Open ${project.title} project details`}
       whileHover={
@@ -989,9 +930,10 @@ function ProjectReelCard({
       {immersiveMode && <div className="project-card-aura" aria-hidden />}
       {immersiveMode && <div className="project-card-sheen" aria-hidden />}
       {immersiveMode && <motion.div className="project-card-spotlight" style={{ opacity: spotlightOpacity, backgroundImage: spotlightGradient }} aria-hidden />}
-      <button
+      <motion.button
         type="button"
         onClick={onOpenDetails}
+        onTap={onOpenDetails}
         data-cursor="Details"
         className="group/media relative block aspect-[16/10] w-full overflow-hidden text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--project-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12]"
         aria-label={`Open ${project.title} project details`}
@@ -1004,7 +946,7 @@ function ProjectReelCard({
         <span className="absolute bottom-4 right-4 rounded-full border border-white/20 bg-black/45 px-3 py-2 text-[0.66rem] font-semibold uppercase tracking-[0.14em] text-[#fff4dd] opacity-95 backdrop-blur-md transition group-hover/media:border-white/35 group-hover/media:bg-black/60">
           View details
         </span>
-      </button>
+      </motion.button>
       <div className="space-y-4 p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -1033,14 +975,15 @@ function ProjectReelCard({
           ))}
         </div>
         <div className="flex flex-wrap items-center gap-3 pt-2">
-          <button
+          <motion.button
             type="button"
             onClick={onOpenDetails}
-            data-cursor="Open"
+            onTap={onOpenDetails}
+            data-cursor="Details"
             className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-white/20 bg-white/[0.06] px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#fff4dd] transition hover:border-white/35 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--project-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12] sm:flex-none"
           >
             Open details <ChevronRight className="h-3.5 w-3.5" />
-          </button>
+          </motion.button>
           <a
             href={project.link}
             target="_blank"
@@ -1093,6 +1036,7 @@ function FeaturedProjectSlider({
               key={project.title}
               type="button"
               onClick={() => onOpenDetails(activeIndex)}
+              onTap={() => onOpenDetails(activeIndex)}
               data-cursor="Details"
               className="group/feature relative block aspect-[16/11] w-full overflow-hidden text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--featured-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12]"
               aria-label={`Open ${project.title} project details`}
@@ -1151,14 +1095,15 @@ function FeaturedProjectSlider({
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
               <Magnetic>
-                <button
+                <motion.button
                   type="button"
                   onClick={() => onOpenDetails(activeIndex)}
+                  onTap={() => onOpenDetails(activeIndex)}
                   data-cursor="Details"
                   className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-[#091018] transition hover:scale-[1.02] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--featured-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12]"
                 >
                   View details <ArrowRight className="h-4 w-4" />
-                </button>
+                </motion.button>
               </Magnetic>
               <Magnetic>
                 <a
@@ -1177,10 +1122,11 @@ function FeaturedProjectSlider({
           <div className="space-y-4">
             <div className="featured-progress-strip">
               {projects.map((item, idx) => (
-                <button
+                <motion.button
                   key={item.title}
                   type="button"
                   onClick={() => onChange(idx)}
+                  onTap={() => onChange(idx)}
                   data-cursor={item.title}
                   className={`featured-progress-segment ${idx === activeIndex ? "is-active" : ""}`}
                   aria-label={`Focus ${item.title}`}
@@ -1190,26 +1136,28 @@ function FeaturedProjectSlider({
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex gap-2">
                 <Magnetic>
-                  <button
+                  <motion.button
                     type="button"
                     onClick={() => onChange(wrapProjectIndex(activeIndex - 1))}
+                    onTap={() => onChange(wrapProjectIndex(activeIndex - 1))}
                     data-cursor="Prev"
                     className="featured-nav-button"
                     aria-label="Previous project"
                   >
                     <ChevronLeft className="h-4 w-4" />
-                  </button>
+                  </motion.button>
                 </Magnetic>
                 <Magnetic>
-                  <button
+                  <motion.button
                     type="button"
                     onClick={() => onChange(wrapProjectIndex(activeIndex + 1))}
+                    onTap={() => onChange(wrapProjectIndex(activeIndex + 1))}
                     data-cursor="Next"
                     className="featured-nav-button"
                     aria-label="Next project"
                   >
                     <ChevronRight className="h-4 w-4" />
-                  </button>
+                  </motion.button>
                 </Magnetic>
               </div>
               <p className="text-[0.62rem] uppercase tracking-[0.18em] text-[#f8eddc]/62">
@@ -1218,17 +1166,18 @@ function FeaturedProjectSlider({
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
               {projects.map((item, idx) => (
-                <button
+                <motion.button
                   key={`thumb-${item.title}`}
                   type="button"
                   onClick={() => onOpenDetails(idx)}
+                  onTap={() => onOpenDetails(idx)}
                   data-cursor={item.title}
                   className={`featured-thumb ${idx === activeIndex ? "is-active" : ""}`}
                   aria-label={`Open ${item.title} project details`}
                 >
                   <span className="font-cinema-display text-lg text-[#fff4e2]">{item.title}</span>
                   <span className="text-[0.62rem] uppercase tracking-[0.16em] text-[#f8eddc]/62">{item.year}</span>
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>
@@ -2508,17 +2457,32 @@ export default function Home() {
                 </a>
               ))}
             </nav>
-            <div className="hidden rounded-full border border-white/12 bg-white/5 px-3 py-1 text-[0.6rem] uppercase tracking-[0.16em] text-[#f8eddc]/68 lg:block">
-              Smooth motion / low-noise UI
+            <div className="flex items-center gap-3">
+              <a
+                href="/Raja_Adi_Pranata_Portfolio.pdf"
+                download="Raja_Adi_Pranata_Portfolio.pdf"
+                className="hidden items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[#fff] shadow-[0_0_12px_rgba(255,255,255,0.05)] transition hover:bg-white/20 hover:shadow-[0_0_16px_rgba(255,255,255,0.1)] sm:flex"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Portfolio PDF
+              </a>
+              <div className="hidden rounded-full border border-white/12 bg-white/5 px-3 py-1 text-[0.6rem] uppercase tracking-[0.16em] text-[#f8eddc]/68 lg:block">
+                Smooth motion / low-noise UI
+              </div>
             </div>
           </div>
           <div className="mx-auto mt-3 flex max-w-6xl items-center justify-between gap-3 px-1 md:hidden">
             <div className="rounded-full border border-white/12 bg-black/28 px-3 py-1 text-[0.58rem] uppercase tracking-[0.18em] text-[#f8eddc]/66 backdrop-blur-xl">
               {storySections.find((section) => section.id === activeScene)?.label ?? "Opening"}
             </div>
-            <div className="rounded-full border border-white/12 bg-black/28 px-3 py-1 text-[0.58rem] uppercase tracking-[0.18em] text-[#f8eddc]/66 backdrop-blur-xl">
-              Smooth scroll motion
-            </div>
+            <a
+              href="/Raja_Adi_Pranata_Portfolio.pdf"
+              download="Raja_Adi_Pranata_Portfolio.pdf"
+              className="flex items-center gap-1.5 rounded-full border border-white/12 bg-white/10 px-3 py-1 text-[0.58rem] uppercase tracking-[0.18em] text-[#fff] backdrop-blur-xl transition hover:bg-white/20"
+            >
+              <Download className="h-3 w-3" />
+              PDF
+            </a>
           </div>
         </header>
 
