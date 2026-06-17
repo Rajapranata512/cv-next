@@ -20,15 +20,15 @@ export default function ATSPage() {
           __html: `
             @page {
               size: A4;
-              margin: 10mm 14mm 10mm 14mm;
+              margin: 6mm 12mm 6mm 12mm;
             }
             *, *::before, *::after {
               margin: 0; padding: 0; box-sizing: border-box;
             }
             body {
               font-family: 'Times New Roman', Times, Georgia, serif;
-              font-size: 9.6pt;
-              line-height: 1.28;
+              font-size: 8.8pt;
+              line-height: 1.15;
               color: #000;
               background: #fff;
               -webkit-print-color-adjust: exact;
@@ -63,14 +63,14 @@ export default function ATSPage() {
               min-width: 0;
             }
             .ats-name {
-              font-size: 18pt;
+              font-size: 15pt;
               font-weight: bold;
               text-transform: uppercase;
               letter-spacing: 0.05em;
               line-height: 1.15;
             }
             .ats-title-line {
-              font-size: 9.5pt;
+              font-size: 9pt;
               font-style: italic;
               margin-top: 1px;
               color: #333;
@@ -83,9 +83,9 @@ export default function ATSPage() {
             .ats-sep { margin: 0 4px; }
 
             /* ── SECTIONS ── */
-            .ats-section { margin-top: 6px; }
+            .ats-section { margin-top: 4px; }
             .ats-section-title {
-              font-size: 9.8pt;
+              font-size: 9.2pt;
               font-weight: bold;
               text-transform: uppercase;
               letter-spacing: 0.045em;
@@ -95,18 +95,18 @@ export default function ATSPage() {
             }
 
             /* ── ENTRIES ── */
-            .ats-entry { margin-bottom: 4px; }
+            .ats-entry { margin-bottom: 2px; }
             .ats-entry-header {
               display: flex;
               justify-content: space-between;
               align-items: baseline;
             }
-            .ats-entry-title { font-weight: bold; font-size: 9.6pt; }
+            .ats-entry-title { font-weight: bold; font-size: 9.2pt; }
             .ats-entry-date {
-              font-style: italic; font-size: 9pt; white-space: nowrap;
+              font-style: italic; font-size: 8.5pt; white-space: nowrap;
             }
             .ats-entry-sub {
-              font-style: italic; font-size: 9pt; color: #222;
+              font-style: italic; font-size: 8.5pt; color: #222;
             }
             .ats-entry-sub-row {
               display: flex;
@@ -121,13 +121,13 @@ export default function ATSPage() {
               margin-top: 1px;
             }
             .ats-list li {
-              margin-bottom: 0.5px;
-              font-size: 9.4pt;
-              line-height: 1.26;
+              margin-bottom: 0px;
+              font-size: 9pt;
+              line-height: 1.2;
             }
 
             /* ── SKILLS ── */
-            .ats-skills-row { margin-bottom: 1px; font-size: 9.4pt; }
+            .ats-skills-row { margin-bottom: 0px; font-size: 9pt; }
             .ats-skills-label { font-weight: bold; }
 
             /* ── INLINE ENTRY (compact) ── */
@@ -337,6 +337,26 @@ export default function ATSPage() {
         {/* ══════════ RESEARCH & PUBLICATIONS ══════════ */}
         <section className="ats-section">
           <h2 className="ats-section-title">Research, Analytics &amp; Publications</h2>
+
+          <div className="ats-entry">
+            <div className="ats-entry-header">
+              <span className="ats-entry-title">
+                From Words to Wages — Text Mining on Job Descriptions
+              </span>
+              <span className="ats-entry-date">2026</span>
+            </div>
+            <ul className="ats-list">
+              <li>
+                <strong>Architected</strong> a machine learning pipeline applying TF-IDF extraction and regularized regression (Ridge, Lasso) on bilingual job descriptions to predict salary determinants.
+              </li>
+              <li>
+                <strong>Spearheaded</strong> empirical analysis confirming that higher salaries strongly correlate with senior cues, English proficiency, and Jakarta-based locations, achieving a Test R² ≈ 0.21.
+              </li>
+              <li>
+                <strong>Published</strong> findings as an accepted paper for presentation at ICAKMPET-2026.
+              </li>
+            </ul>
+          </div>
 
           <div className="ats-entry">
             <div className="ats-entry-header">

@@ -4,6 +4,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { SiWhatsapp, SiFigma } from "react-icons/si";
+import { Download } from "lucide-react";
 
 const PROFILE = {
   name: "Raja Adi Pranata",
@@ -94,16 +95,29 @@ export default function CVPage() {
 
               <div className="flex shrink-0 flex-col items-end gap-2">
                 <div className={cls("text-[10px] print:text-[9px]", MUTED, "text-right")}>Jakarta, Indonesia</div>
-                <button
-                  type="button"
-                  className={cls(
-                    "no-print rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700",
-                    "transition hover:bg-slate-50 hover:text-slate-950 print:hidden"
-                  )}
-                  onClick={() => window.print()}
-                >
-                  Print to PDF
-                </button>
+                <div className="no-print flex items-center gap-2 print:hidden">
+                  <a
+                    href="/Raja_Adi_Pranata_Portfolio.pdf"
+                    download="Raja_Adi_Pranata_Portfolio.pdf"
+                    className={cls(
+                      "flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white",
+                      "transition hover:bg-teal-700 shadow-sm"
+                    )}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    PORTFOLIO PDF
+                  </a>
+                  <button
+                    type="button"
+                    className={cls(
+                      "rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700",
+                      "transition hover:bg-slate-50 hover:text-slate-950 shadow-sm"
+                    )}
+                    onClick={() => window.print()}
+                  >
+                    Print
+                  </button>
+                </div>
               </div>
             </div>
 

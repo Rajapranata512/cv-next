@@ -363,19 +363,21 @@ const projects: Project[] = [
   {
     title: "From Words to Wages",
     description: "ICAKMPET 2026 Accepted Paper: Text Mining on Indonesian Job Descriptions to Predict Salary Determinants.",
-    link: "https://github.com/Rajapranata512/RESEARCH_METHODOLOGY",
-    liveLabel: "Research Code",
+    link: "/papers/from-words-to-wages.pdf",
+    liveLabel: "Read Paper PDF",
     image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop",
     tags: ["Machine Learning", "NLP", "Text Mining", "Python", "Research"],
     icon: Database,
     year: "2026",
     role: "Lead Researcher",
     spotlight: "Published research applying NLP to Indonesian job postings, featuring TF-IDF extraction and regularized regression (Ridge, Lasso) to determine wage impacts.",
-    metrics: ["ICAKMPET 2026 Accepted", "Ridge & Lasso Models", "TF-IDF Analysis"],
+    metrics: ["ICAKMPET 2026 Accepted", "Ridge & Lasso Models", "TF-IDF Analysis", "Test R² ≈ 0.21 (Ridge)"],
     narrative: [
       "Extracted and cleansed bilingual Indonesian job descriptions to identify key skill words driving salaries.",
       "Trained Ridge and Lasso regression models, showing that text mining adds significant predictive value for salaries.",
-      "Paper accepted for presentation at ICAKMPET-2026. (Includes LOA and published findings)."
+      "Paper accepted for presentation at ICAKMPET-2026. (Includes LOA and published findings).",
+      "Key Finding 1: Higher salaries correlate with senior cues, English proficiency, and Jakarta-based locations.",
+      "Key Finding 2: Lower salaries align with entry-level indicators and spreadsheet-centric tooling."
     ],
     mood: {
       tone: "executive",
