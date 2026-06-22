@@ -259,6 +259,29 @@ export default function ATSPage() {
           <div className="ats-entry">
             <div className="ats-entry-header">
               <span className="ats-entry-title">
+                Karyora — Multi-Tenant SaaS Portfolio Platform
+              </span>
+              <span className="ats-entry-date">2026</span>
+            </div>
+            <div className="ats-entry-sub">
+              Next.js 16, React 19, Supabase, Tailwind CSS, TypeScript | karyora-kappa.vercel.app
+            </div>
+            <ul className="ats-list">
+              <li>
+                <strong>Architected</strong> a scalable, no-code portfolio builder enabling users to generate over 400,000 visual combinations using a dynamic JSONB-based design engine.
+              </li>
+              <li>
+                <strong>Engineered</strong> a secure multi-tenant backend on Supabase PostgreSQL, implementing strict Row Level Security (RLS) to guarantee complete data isolation between user accounts.
+              </li>
+              <li>
+                <strong>Spearheaded</strong> a granular administrative access system mapping complex Master and Assistant roles directly to Supabase Auth metadata for scalable authorization.
+              </li>
+            </ul>
+          </div>
+
+          <div className="ats-entry">
+            <div className="ats-entry-header">
+              <span className="ats-entry-title">
                 Asosiasi Alumni DRM BINUS — Full-Stack Web App
               </span>
               <span className="ats-entry-date">2026</span>

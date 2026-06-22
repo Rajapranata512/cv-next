@@ -137,6 +137,44 @@ const chapters: Chapter[] = [
 
 const projects: Project[] = [
   {
+    title: "Karyora - Portfolio Design Platform",
+    description: "A multi-tenant, no-code portfolio platform with over 400,000 visual combinations.",
+    link: "https://karyora-kappa.vercel.app",
+    liveLabel: "Live App",
+    image: "https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=2070&auto=format&fit=crop",
+    tags: ["Next.js 16", "React 19", "Supabase", "Tailwind CSS", "TypeScript"],
+    icon: Globe2,
+    year: "2026",
+    role: "Full-Stack Engineer & Architect",
+    spotlight: "Architected a scalable SaaS platform with strict tenant isolation, a dynamic JSONB-based design engine, and granular assistant administration roles.",
+    metrics: ["Multi-tenant", "No-code engine", "400k+ variations"],
+    narrative: [
+      "Engineered a dynamic design system using Next.js 16, React 19, and Framer Motion, enabling users to generate over 400,000 unique portfolio variations via UI without writing code.",
+      "Architected a secure multi-tenant backend using Supabase PostgreSQL, implementing Row Level Security (RLS) to enforce strict data isolation between user portfolios.",
+      "Developed a granular access control system featuring Master and Assistant Admin consoles with explicit permission boundaries mapped via Supabase Auth metadata."
+    ],
+    mood: {
+      tone: "startup",
+      aura: ["rgba(63, 207, 142, 0.3)", "rgba(20, 158, 202, 0.24)"],
+      sheen: "rgba(255, 255, 255, 0.48)",
+      overlay: ["rgba(0, 0, 0, 0.05)", "rgba(10, 15, 20, 0.82)"],
+      accent: "#3FCF8E",
+      icon: "#149ECA",
+      chipBg: "rgba(63, 207, 142, 0.14)",
+      chipBorder: "rgba(63, 207, 142, 0.34)",
+      auraSpeed: 8.2,
+      hover: { y: -8, rotateX: 2.5, rotateY: -2.5, scale: 1.015 },
+    },
+    cue: {
+      name: "SaaS Engine",
+      motif: [220, 277, 330, 440],
+      waveform: "sine",
+      pan: [-0.2, 0.2],
+      glide: 1.1,
+      q: 1.2,
+    },
+  },
+  {
     title: "Asosiasi Alumni DRM",
     description: "Laravel alumni association platform with member flows, content management, analytics, and cPanel deployment.",
     link: "https://asosiasidrm.id/",
@@ -937,7 +975,7 @@ function ProjectReelCard({
         onClick={onOpenDetails}
         onTap={onOpenDetails}
         data-cursor="Details"
-        className="group/media relative block aspect-[16/10] w-full overflow-hidden text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--project-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12]"
+        className="group/media relative z-30 pointer-events-auto block aspect-[16/10] w-full overflow-hidden text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--project-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12]"
         aria-label={`Open ${project.title} project details`}
       >
         <Image src={project.image} alt={`${project.title} preview`} fill className="object-cover transition duration-700 group-hover:scale-110" />
@@ -949,8 +987,8 @@ function ProjectReelCard({
           View details
         </span>
       </motion.button>
-      <div className="space-y-4 p-5">
-        <div className="flex items-start justify-between gap-3">
+      <div className="space-y-4 p-5 relative z-30 pointer-events-auto">
+        <div className="flex items-start justify-between gap-3 relative z-30">
           <div>
             <h3 className="font-cinema-display text-2xl text-[#fff5e6]">{project.title}</h3>
             <p className="project-tone-label mt-1 text-[0.62rem] uppercase tracking-[0.18em] text-[#f8eddc]/62">
@@ -962,7 +1000,7 @@ function ProjectReelCard({
             target="_blank"
             rel="noreferrer"
             data-cursor="Visit"
-            className="project-card-visit inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-full border border-white/20 bg-black/25 px-4 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#f8ead4] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--project-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12]"
+            className="project-card-visit relative z-30 pointer-events-auto inline-flex min-h-10 shrink-0 items-center justify-center gap-2 rounded-full border border-white/20 bg-black/25 px-4 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-[#f8ead4] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--project-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12]"
             aria-label={`Visit ${project.title}`}
           >
             {liveLabel} <ExternalLink className="h-3.5 w-3.5" />
@@ -976,13 +1014,13 @@ function ProjectReelCard({
             </span>
           ))}
         </div>
-        <div className="flex flex-wrap items-center gap-3 pt-2">
+        <div className="flex flex-wrap items-center gap-3 pt-2 relative z-30 pointer-events-auto">
           <motion.button
             type="button"
             onClick={onOpenDetails}
             onTap={onOpenDetails}
             data-cursor="Details"
-            className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-white/20 bg-white/[0.06] px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#fff4dd] transition hover:border-white/35 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--project-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12] sm:flex-none"
+            className="relative z-30 pointer-events-auto inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-white/20 bg-white/[0.06] px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#fff4dd] transition hover:border-white/35 hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--project-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12] sm:flex-none"
           >
             Open details <ChevronRight className="h-3.5 w-3.5" />
           </motion.button>
@@ -991,7 +1029,7 @@ function ProjectReelCard({
             target="_blank"
             rel="noreferrer"
             data-cursor="Visit"
-            className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-white/15 px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#f8eddc]/82 transition hover:border-[var(--project-accent-soft)] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--project-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12] sm:flex-none"
+            className="relative z-30 pointer-events-auto inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full border border-white/15 px-4 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[#f8eddc]/82 transition hover:border-[var(--project-accent-soft)] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--project-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#070b12] sm:flex-none"
           >
             {liveLabel} <ExternalLink className="h-3.5 w-3.5" />
           </a>
@@ -1095,7 +1133,7 @@ function FeaturedProjectSlider({
                 </span>
               ))}
             </div>
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-wrap gap-3 relative z-20 pointer-events-auto">
               <Magnetic>
                 <motion.button
                   type="button"
