@@ -59,7 +59,7 @@ type Chapter = { year: string; title: string; text: string };
 type AudioPreset = "soft" | "epic";
 type LiveIntensityMode = "calm" | "drive" | "peak";
 type ProjectMood = {
-  tone: "gourmet" | "sonic" | "executive" | "arcade";
+  tone: "gourmet" | "sonic" | "executive" | "arcade" | "startup";
   aura: [string, string];
   sheen: string;
   overlay: [string, string];
